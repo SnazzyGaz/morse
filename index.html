@@ -346,6 +346,31 @@ button:active { transform: scale(0.97); }
   width:8px; height:8px; border-radius:50%; background:var(--surface); border:1px solid var(--border); transition:all 0.05s;
 }
 .live-scan-indicator .pulse.on { background:var(--green); border-color:var(--green); box-shadow:0 0 8px rgba(57,255,122,0.55); }
+.live-scan-quality {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.live-scan-quality-text {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.live-scan-quality-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.live-scan-quality-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7a2828 0%, #b86c1e 45%, #39ff7a 100%);
+  transition: width 0.16s ease;
+}
 .decode-output.live { min-height:1.9rem; }
 .scanner-hint { font-size:0.62rem; color:var(--text-dim); line-height:1.7; letter-spacing:0.03em; margin-top:0.55rem; }
 .scanner-hidden-media { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
@@ -519,6 +544,12 @@ button:active { transform: scale(0.97); }
         <div class="pulse" id="live-scan-pulse"></div>
         <span id="live-scan-state">Idle</span>
       </div>
+      <div class="live-scan-quality">
+        <div class="live-scan-quality-text" id="live-scan-quality-text">Signal quality: idle</div>
+        <div class="live-scan-quality-meter">
+          <div class="live-scan-quality-fill" id="live-scan-quality-fill"></div>
+        </div>
+      </div>
     </div>
 
     <div class="decode-out-box">
@@ -633,6 +664,8 @@ const liveScanMorse = document.getElementById('live-scan-morse');
 const liveScanOutput = document.getElementById('live-scan-output');
 const liveScanPulse = document.getElementById('live-scan-pulse');
 const liveScanState = document.getElementById('live-scan-state');
+const liveScanQualityText = document.getElementById('live-scan-quality-text');
+const liveScanQualityFill = document.getElementById('live-scan-quality-fill');
 const liveScanVideo = document.getElementById('live-scan-video');
 const liveScanCanvas = document.getElementById('live-scan-canvas');
 const refGrid = document.getElementById('ref-grid');
@@ -686,7 +719,11 @@ const liveScanner = {
   lightContrastSmoothed: 0,
   lightStateLatch: false,
   calibratingUntil: 0,
-  timeData: null
+  timeData: null,
+  toneSamples: [],
+  gapSamples: [],
+  signalQuality: 0,
+  signalQualityLabel: 'Idle'
 };
 
 function setStatus(msg) { statusText.textContent = msg; }
@@ -699,6 +736,59 @@ function getDotMs() { return Math.round(1200 / parseInt(wpmSlider.value, 10)); }
 function getTransmitDotMs(useTorch = togFlash.checked) {
   const dot = getDotMs();
   return useTorch ? Math.max(dot, 140) : dot;
+}
+function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+function pushLimited(list, value, limit = 18) {
+  list.push(value);
+  if (list.length > limit) list.splice(0, list.length - limit);
+}
+function median(values) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+function nearestIndex(value, centroids) {
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < centroids.length; i++) {
+    const dist = Math.abs(value - centroids[i]);
+    if (dist < bestDist) {
+      best = i;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+function clusterDurations(samples, fallbackCentroids) {
+  if (!samples.length) return [...fallbackCentroids];
+
+  const sorted = [...samples].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  if (sorted.length < fallbackCentroids.length + 1 || max < min * 1.45) return [...fallbackCentroids];
+
+  let centroids = [...fallbackCentroids];
+  for (let pass = 0; pass < 6; pass++) {
+    const buckets = centroids.map(() => []);
+    for (const sample of sorted) buckets[nearestIndex(sample, centroids)].push(sample);
+    centroids = centroids.map((centroid, i) => buckets[i].length ? median(buckets[i]) : centroid);
+  }
+  return centroids.sort((a, b) => a - b);
+}
+function getToneCentroids() {
+  const dot = liveScanner.dotEstimate || getDotMs();
+  return clusterDurations(liveScanner.toneSamples, [dot, dot * 3]);
+}
+function getGapCentroids() {
+  const dot = liveScanner.dotEstimate || getDotMs();
+  return clusterDurations(liveScanner.gapSamples, [dot, dot * 3, dot * 7]);
+}
+function updateLiveScanQuality(score, label) {
+  liveScanner.signalQuality = clamp(score, 0, 1);
+  liveScanner.signalQualityLabel = label;
+  liveScanQualityFill.style.width = `${Math.round(liveScanner.signalQuality * 100)}%`;
+  liveScanQualityText.textContent = `Signal quality: ${label}`;
 }
 
 function autoResizeMessageInput() {
@@ -1407,13 +1497,18 @@ function resetLiveScannerState() {
   liveScanner.lightContrastBaseline = 0;
   liveScanner.lightContrastSmoothed = 0;
   liveScanner.lightStateLatch = false;
-  liveScanner.calibratingUntil = performance.now() + 900;
+  liveScanner.calibratingUntil = performance.now() + 1200;
+  liveScanner.toneSamples = [];
+  liveScanner.gapSamples = [];
+  liveScanner.signalQuality = 0;
+  liveScanner.signalQualityLabel = 'Idle';
   liveScanMorse.textContent = 'Waiting for live input...';
   liveScanMorse.classList.add('empty');
   liveScanOutput.textContent = 'Decoded live text will appear here...';
   liveScanOutput.classList.add('empty');
   liveScanPulse.classList.remove('on');
   liveScanState.textContent = 'Idle';
+  updateLiveScanQuality(0, 'Idle');
 }
 
 function updateLiveOutputs() {
@@ -1452,37 +1547,48 @@ function adaptDotEstimate(unitMs) {
 }
 
 function commitToneDuration(ms) {
-  const dot = liveScanner.dotEstimate || getDotMs();
-  const isDash = ms > dot * 1.9;
+  const centroids = getToneCentroids();
+  const shortTone = centroids[0];
+  const longTone = centroids[1];
+  const isDash = longTone > shortTone * 1.35 && nearestIndex(ms, centroids) === 1;
   appendLiveRaw(isDash ? '-' : '.');
-  adaptDotEstimate(isDash ? ms / 3 : ms);
+  pushLimited(liveScanner.toneSamples, ms);
+  adaptDotEstimate(isDash ? longTone / 3 : shortTone);
 }
 
 function commitGapDuration(ms) {
-  const dot = liveScanner.dotEstimate || getDotMs();
-  if (ms >= dot * 5.5) {
+  pushLimited(liveScanner.gapSamples, ms);
+  const centroids = getGapCentroids();
+  const shortGap = centroids[0];
+  const midGap = centroids[1];
+  const longGap = centroids[2];
+  const cluster = nearestIndex(ms, centroids);
+
+  if ((cluster === 2 && longGap > midGap * 1.45) || ms >= midGap * 1.8) {
     trimLiveTrailingSpace();
     appendLiveRaw(' / ');
     liveScanner.gapLevel = 2;
-  } else if (ms >= dot * 2.2) {
+    adaptDotEstimate(longGap / 7);
+  } else if ((cluster >= 1 && midGap > shortGap * 1.45) || ms >= shortGap * 2.1) {
     if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
     liveScanner.gapLevel = 1;
-    adaptDotEstimate(ms / 3);
+    adaptDotEstimate(midGap / 3);
   } else {
     liveScanner.gapLevel = 0;
+    adaptDotEstimate(shortGap);
   }
 }
 
 function maybeCommitIdleGap(now) {
   if (!liveScanner.running || liveScanner.lastState || !liveScanner.hasSignal) return;
-  const dot = liveScanner.dotEstimate || getDotMs();
+  const [shortGap, midGap, longGap] = getGapCentroids();
   const offMs = now - liveScanner.lastChange;
 
-  if (liveScanner.gapLevel < 1 && offMs >= dot * 2.2) {
+  if (liveScanner.gapLevel < 1 && offMs >= Math.max(shortGap * 2.1, midGap * 0.82)) {
     if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
     liveScanner.gapLevel = 1;
   }
-  if (liveScanner.gapLevel < 2 && offMs >= dot * 5.5) {
+  if (liveScanner.gapLevel < 2 && offMs >= Math.max(midGap * 1.85, longGap * 0.82)) {
     trimLiveTrailingSpace();
     appendLiveRaw(' / ');
     liveScanner.gapLevel = 2;
@@ -1506,7 +1612,9 @@ function updateScannerSignal(isOn, stateLabel) {
   if (isOn === liveScanner.lastState) return;
 
   const duration = now - liveScanner.lastChange;
-  const minPulseMs = Math.max(45, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.45, 120));
+  const toneCentroids = getToneCentroids();
+  const gapCentroids = getGapCentroids();
+  const minPulseMs = Math.max(40, Math.min(toneCentroids[0] * 0.55, 120));
   const minGapMs = Math.max(30, minPulseMs * 0.65);
   if (liveScanner.lastState) {
     if (duration >= minPulseMs) {
@@ -1515,6 +1623,8 @@ function updateScannerSignal(isOn, stateLabel) {
     }
   } else if (liveScanner.hasSignal && duration >= minGapMs) {
     commitGapDuration(duration);
+  } else if (!isOn && duration >= gapCentroids[0] * 0.8) {
+    adaptDotEstimate(gapCentroids[0]);
   }
 
   liveScanner.lastState = isOn;
@@ -1567,6 +1677,7 @@ async function stopLiveScanner() {
   btnScanStop.style.display = 'none';
   liveScanPulse.classList.remove('on');
   liveScanState.textContent = 'Stopped';
+  updateLiveScanQuality(0, 'Stopped');
   setStatus('Live scanner stopped');
 }
 
@@ -1631,7 +1742,7 @@ function detectToneBand(analyser, freqData, timeData) {
 
   if (performance.now() < liveScanner.calibratingUntil) {
     liveScanner.audioStateLatch = false;
-    return { on: false, label: 'Calibrating mic' };
+    return { on: false, label: 'Calibrating mic', quality: 0.12, qualityLabel: 'Calibrating' };
   }
 
   const minRms = Math.max(liveScanner.audioRmsFloor * 1.22, 0.0075);
@@ -1645,7 +1756,17 @@ function detectToneBand(analyser, freqData, timeData) {
   if (!liveScanner.audioStateLatch && onThreshold) liveScanner.audioStateLatch = true;
   if (liveScanner.audioStateLatch && offThreshold) liveScanner.audioStateLatch = false;
 
-  return { on: liveScanner.audioStateLatch, label: liveScanner.audioStateLatch ? 'Tone locked' : 'Listening' };
+  const ratioScore = clamp((liveScanner.audioRatioSmooth - 1.05) / 2.2, 0, 1);
+  const rmsScore = clamp((liveScanner.audioRmsSmooth - liveScanner.audioRmsFloor * 0.95) / Math.max(liveScanner.audioRmsFloor * 1.8, 0.015), 0, 1);
+  const quality = clamp(ratioScore * 0.65 + rmsScore * 0.35, 0, 1);
+  const qualityLabel = liveScanner.audioStateLatch ? (quality > 0.72 ? 'Locked' : 'Weak lock') : (quality > 0.42 ? 'Searching' : 'Noisy');
+
+  return {
+    on: liveScanner.audioStateLatch,
+    label: liveScanner.audioStateLatch ? 'Tone locked' : 'Listening',
+    quality,
+    qualityLabel
+  };
 }
 
 async function startAudioScanner() {
@@ -1678,6 +1799,7 @@ async function startAudioScanner() {
   const loop = () => {
     if (!liveScanner.running || liveScanner.mode !== 'audio' || !liveScanner.analyser) return;
     const info = detectToneBand(analyser, liveScanner.freqData, liveScanner.timeData);
+    updateLiveScanQuality(info.quality ?? 0, info.qualityLabel || 'Listening');
     updateScannerSignal(info.on, info.label);
     liveScanner.rafId = requestAnimationFrame(loop);
   };
@@ -1761,6 +1883,7 @@ async function startLightScanner() {
       }
 
       if (performance.now() < liveScanner.calibratingUntil) {
+        updateLiveScanQuality(0.12, 'Calibrating');
         updateScannerSignal(false, 'Calibrating camera');
         liveScanner.rafId = requestAnimationFrame(loop);
         return;
@@ -1780,6 +1903,10 @@ async function startLightScanner() {
         liveScanner.lightStateLatch = false;
       }
 
+      const contrastScore = clamp((liveScanner.lightContrastSmoothed - contrastBase) / Math.max(onContrast - contrastBase, 1), 0, 1);
+      const brightnessScore = clamp(brightnessDelta / Math.max(onBrightness, 1), 0, 1);
+      const lightQuality = clamp(contrastScore * 0.6 + brightnessScore * 0.4, 0, 1);
+      updateLiveScanQuality(lightQuality, liveScanner.lightStateLatch ? (lightQuality > 0.72 ? 'Locked' : 'Weak lock') : (lightQuality > 0.42 ? 'Searching' : 'Dim/noisy'));
       updateScannerSignal(liveScanner.lightStateLatch, liveScanner.lightStateLatch ? 'Light detected' : 'Watching light');
     }
 
@@ -1798,6 +1925,7 @@ async function startLiveScanner() {
   btnScanStart.style.display = 'none';
   btnScanStop.style.display = '';
   liveScanState.textContent = liveScanner.mode === 'audio' ? 'Starting microphone...' : 'Starting camera...';
+  updateLiveScanQuality(0.08, 'Starting');
   setStatus(liveScanner.mode === 'audio' ? 'Starting live audio scanner...' : 'Starting live light scanner...');
 
   try {
@@ -1806,6 +1934,7 @@ async function startLiveScanner() {
       liveScanner.running = false;
       btnScanStart.style.display = '';
       btnScanStop.style.display = 'none';
+      updateLiveScanQuality(0, 'Unavailable');
       return;
     }
 
@@ -1819,6 +1948,7 @@ async function startLiveScanner() {
     btnScanStart.style.display = '';
     btnScanStop.style.display = 'none';
     liveScanState.textContent = /denied|permission/i.test(String(e?.message || e)) ? 'Permission denied' : 'Unavailable';
+    updateLiveScanQuality(0, /denied|permission/i.test(String(e?.message || e)) ? 'Permission' : 'Unavailable');
     setStatus(liveScanner.mode === 'audio' ? 'Microphone unavailable' : 'Camera unavailable');
   }
 }
