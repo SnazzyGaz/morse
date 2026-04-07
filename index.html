@@ -23,12 +23,13 @@
   --border: #2a2a1e;
   --text: #c8b878;
   --text-dim: #5a5438;
+  --app-width: min(100%, 920px);
   --mono: 'Share Tech Mono', monospace;
   --display: 'Orbitron', monospace;
 }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); overflow-x: hidden; }
 body {
-  display: flex; flex-direction: column; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; min-height: 100dvh;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 body::before {
@@ -36,6 +37,7 @@ body::before {
   background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
 }
 header {
+  width: var(--app-width);
   padding: 1.2rem 1.5rem 0.8rem; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; gap: 1rem; flex-shrink: 0;
 }
@@ -49,7 +51,10 @@ header {
 h1 { font-family: var(--display); font-size: 1rem; font-weight: 700; color: var(--amber); letter-spacing: 0.15em; }
 .subtitle { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.1em; margin-top: 2px; }
 
-.tab-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.tab-nav {
+  width: var(--app-width);
+  display: flex; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0;
+}
 .tab-btn {
   flex: 1; padding: 0.65rem 0.5rem;
   font-family: var(--display); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
@@ -58,26 +63,27 @@ h1 { font-family: var(--display); font-size: 1rem; font-weight: 700; color: var(
 }
 .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); background: var(--surface2); }
 
-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+main {
+  width: var(--app-width);
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
 .tab-panel { display: none; flex-direction: column; flex: 1; overflow-y: auto; }
 .tab-panel.active { display: flex; }
 section, .decode-out-box, .live-scan-box, .btn-row, .mode-row, .slider-row, .toggle-row { min-width: 0; }
 section { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
 .section-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.6rem; }
 
-textarea,
-textarea.morse-typed {
+textarea {
   width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
   color: var(--amber); font-family: var(--mono); line-height: 1.5;
   padding: 0.75rem 1rem; resize: none; outline: none;
   caret-color: var(--amber-glow); transition: border-color 0.2s; -webkit-appearance: none;
 }
 textarea { font-size: 1.1rem; min-height: 80px; }
-textarea.morse-typed { color: var(--text); font-size: 1rem; letter-spacing: 0.1em; min-height: 56px; padding: 0.6rem 0.8rem; }
-textarea::placeholder,
-textarea.morse-typed::placeholder { color: var(--text-dim); }
-textarea:focus,
-textarea.morse-typed:focus { border-color: var(--amber-dim); }
+textarea::placeholder { color: var(--text-dim); }
+textarea:focus { border-color: var(--amber-dim); }
 
 /* one-line expanding message field */
 .message-input {
@@ -176,6 +182,7 @@ button:active { transform: scale(0.97); }
 @keyframes pulse-border { 0%,100%{box-shadow:0 0 12px rgba(232,160,32,0.25)} 50%{box-shadow:0 0 20px rgba(232,160,32,0.5)} }
 
 .btn-stop { border-color: #4a1a1a; color: #c05050; background: #1a0a0a; }
+.btn-save-audio { min-width: 96px; }
 .btn-clear { min-width: 60px; }
 
 .flash-indicator { width: 12px; height: 12px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; transition: all 0.05s; }
@@ -195,6 +202,7 @@ button:active { transform: scale(0.97); }
 .warning.visible { display: block; }
 
 .status-bar {
+  width: var(--app-width);
   padding: 0.5rem 1.5rem; font-size: 0.62rem; letter-spacing: 0.12em; color: var(--text-dim);
   border-top: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;
   text-transform: uppercase; background: var(--surface); flex-shrink: 0;
@@ -256,26 +264,58 @@ button:active { transform: scale(0.97); }
 .morse-live .cursor { display: inline-block; width: 7px; height: 0.9em; background: var(--amber); vertical-align: middle; margin-left: 2px; animation: blink 1s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-.tap-pad { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.5rem; }
+.tap-pad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  max-width: 420px;
+}
 .tap-btn {
-  padding: 1rem 0.4rem; font-family: var(--display); font-weight: 700;
+  min-height: 48px;
+  padding: 0.75rem 0.35rem; font-family: var(--display); font-weight: 700;
   color: var(--text); background: var(--surface2); border: 1px solid var(--border);
   border-radius: 4px; cursor: pointer; transition: all 0.1s; user-select: none;
-  -webkit-tap-highlight-color: transparent; font-size: 0.9rem; line-height: 1.2;
+  -webkit-tap-highlight-color: transparent; font-size: 0.78rem; line-height: 1.1;
 }
 .tap-btn:active { transform: scale(0.93); background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
-.tap-btn.dot { font-size: 2rem; }
-.tap-btn.dash { font-size: 0.8rem; letter-spacing: 0.08em; }
-.tap-btn.space { font-size: 0.5rem; letter-spacing: 0.06em; color: var(--text-dim); }
-.tap-btn.word-sp { font-size: 0.5rem; letter-spacing: 0.04em; color: var(--text-dim); }
-.tap-btn.backspace { font-size: 0.75rem; color: var(--text-dim); }
-.tap-btn.clr-decode { font-size: 0.55rem; letter-spacing: 0.1em; color: var(--text-dim); }
+.tap-btn.dot { font-size: 1.5rem; }
+.tap-btn.dash { font-size: 0.72rem; letter-spacing: 0.08em; }
+.tap-btn.backspace { font-size: 0.68rem; color: var(--text-dim); }
+.tap-btn.clr-decode { font-size: 0.56rem; letter-spacing: 0.1em; color: var(--text-dim); }
 
-.decode-hint { font-size: 0.62rem; color: var(--text-dim); line-height: 1.7; letter-spacing: 0.03em; margin-top: 0.5rem; }
-.decode-hint code { color: var(--text); background: var(--surface2); padding: 1px 4px; border-radius: 2px; font-family: var(--mono); }
+.tap-hint {
+  margin-top: 0.55rem;
+  max-width: 420px;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+}
 
 .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 3px; max-height: 210px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-.ref-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; }
+.ref-item {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.ref-item:hover,
+.ref-item:focus-visible {
+  border-color: var(--amber);
+  background: rgba(232,160,32,0.08);
+  outline: none;
+}
+.ref-item.previewing {
+  border-color: var(--amber-glow);
+  background: rgba(232,160,32,0.16);
+  box-shadow: 0 0 10px rgba(232,160,32,0.18);
+}
 .ref-char { font-family: var(--display); font-size: 0.65rem; color: var(--amber); font-weight: 700; }
 .ref-code { font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.06em; }
 .timing-row { font-size: 0.72rem; color: var(--text-dim); line-height: 1.9; letter-spacing: 0.04em; }
@@ -309,14 +349,15 @@ button:active { transform: scale(0.97); }
 .scanner-hidden-media { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
 
 @media (max-width: 600px) {
+  :root { --app-width: 100%; }
   header { padding: 0.9rem 1rem 0.7rem; }
   section { padding: 0.8rem 1rem; }
   .status-bar { padding: 0.45rem 1rem; }
   .controls { grid-template-columns: 1fr; }
   .btn-row { gap: 0.5rem; }
-  .tap-pad { grid-template-columns: 1fr 1fr; }
-  .tap-btn.clr-decode { grid-column: span 2 !important; }
-  textarea.morse-typed { min-height: 50px; font-size: 0.95rem; }
+  .tap-pad { gap: 0.4rem; }
+  .tap-btn { min-height: 44px; padding: 0.65rem 0.25rem; }
+  .tap-btn.dot { font-size: 1.35rem; }
   .message-input { min-height: 46px; height: 46px; }
   .decode-output { font-size: 1.05rem; }
   .live-scan-box, .decode-out-box { padding: 0.65rem 0.8rem; }
@@ -430,6 +471,7 @@ button:active { transform: scale(0.97); }
     <div class="btn-row">
       <button class="btn-transmit" id="btn-transmit">▶ Transmit</button>
       <button class="btn-stop" id="btn-stop" style="display:none">■ Stop</button>
+      <button class="btn-save-audio" id="btn-save-audio">SAVE MP3</button>
       <button class="btn-clear" id="btn-clear">CLR</button>
     </div>
   </section>
@@ -439,29 +481,21 @@ button:active { transform: scale(0.97); }
   <section>
     <div class="section-label">Decoded Text</div>
     <div class="decode-out-box">
-      <div class="decode-output empty" id="decode-output">Enter morse code below...</div>
+      <div class="decode-output empty" id="decode-output">Enter dots and dashes below...</div>
     </div>
     <div class="morse-live" id="morse-live"><span class="cursor"></span></div>
   </section>
 
   <section>
-    <div class="section-label">Tap Input</div>
+    <div class="section-label">Dot / Dash Input</div>
     <div class="tap-pad">
       <button class="tap-btn dot" id="tap-dot">·</button>
       <button class="tap-btn dash" id="tap-dash">—</button>
-      <button class="tap-btn space" id="tap-space">LETTER<br>SPACE</button>
-      <button class="tap-btn word-sp" id="tap-word">WORD<br>SPACE</button>
       <button class="tap-btn backspace" id="tap-back">⌫ DEL</button>
-      <button class="tap-btn clr-decode" id="tap-clr" style="grid-column:span 3">CLEAR ALL</button>
+      <button class="tap-btn clr-decode" id="tap-clr">CLEAR</button>
     </div>
-  </section>
-
-  <section>
-    <div class="section-label">Or Type Morse Directly</div>
-    <textarea class="morse-typed" id="morse-typed" placeholder=". - - .  . - .  ..." rows="2" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-    <div class="decode-hint">
-      Use <code>.</code> for dot, <code>-</code> for dash. Space between letters, <code>/</code> or 3 spaces between words.<br>
-      Example: <code>... --- ...</code> = SOS
+    <div class="tap-hint">
+      Enter only dots and dashes. Letter and word gaps are added automatically from short and long pauses between taps.
     </div>
   </section>
 
@@ -544,6 +578,7 @@ button:active { transform: scale(0.97); }
   <span id="status-text">Ready</span>
 </div>
 
+<script src="lame.min.js"></script>
 <script>
 const MORSE = {
   'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---',
@@ -562,6 +597,7 @@ const morseStrip = document.getElementById('morse-strip');
 const unsupportedWarning = document.getElementById('unsupported-warning');
 const btnTransmit = document.getElementById('btn-transmit');
 const btnStop = document.getElementById('btn-stop');
+const btnSaveAudio = document.getElementById('btn-save-audio');
 const btnClear = document.getElementById('btn-clear');
 const wpmSlider = document.getElementById('wpm');
 const wpmVal = document.getElementById('wpm-val');
@@ -586,7 +622,6 @@ const txOptionsSummary = document.getElementById('tx-options-summary');
 
 const decodeOutput = document.getElementById('decode-output');
 const morseLive = document.getElementById('morse-live');
-const morseTyped = document.getElementById('morse-typed');
 
 const scanModeAudioBtn = document.getElementById('scan-mode-audio');
 const scanModeLightBtn = document.getElementById('scan-mode-light');
@@ -598,6 +633,7 @@ const liveScanPulse = document.getElementById('live-scan-pulse');
 const liveScanState = document.getElementById('live-scan-state');
 const liveScanVideo = document.getElementById('live-scan-video');
 const liveScanCanvas = document.getElementById('live-scan-canvas');
+const refGrid = document.getElementById('ref-grid');
 
 let audioCtx = null;
 let currentOsc = null;
@@ -606,9 +642,14 @@ let transmitting = false;
 let stopRequested = false;
 let torchTrack = null;
 let torchStream = null;
+let torchOn = false;
 let symbolEls = [];
 let lastEncoded = { tokens: [], morse: '', unsupported: [] };
 let tapMorse = '';
+let tapLastInputAt = 0;
+let tapLetterGapTimer = null;
+let tapWordGapTimer = null;
+let refPreviewToken = 0;
 
 let messagePointerStartY = 0;
 let messagePointerStartX = 0;
@@ -631,9 +672,19 @@ const liveScanner = {
   source: null,
   freqData: null,
   bandNoise: 0.0005,
+  audioBandSmooth: 0,
+  audioRatioSmooth: 1,
+  audioFloor: 0.0005,
+  audioRmsFloor: 0.003,
+  audioRmsSmooth: 0,
+  audioStateLatch: false,
   lightBaseline: 0,
   lightSmoothed: 0,
-  lightStateLatch: false
+  lightContrastBaseline: 0,
+  lightContrastSmoothed: 0,
+  lightStateLatch: false,
+  calibratingUntil: 0,
+  timeData: null
 };
 
 function setStatus(msg) { statusText.textContent = msg; }
@@ -643,6 +694,10 @@ function setActive(on) {
 }
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function getDotMs() { return Math.round(1200 / parseInt(wpmSlider.value, 10)); }
+function getTransmitDotMs(useTorch = togFlash.checked) {
+  const dot = getDotMs();
+  return useTorch ? Math.max(dot, 140) : dot;
+}
 
 function autoResizeMessageInput() {
   const minHeight = window.innerWidth <= 600 ? 46 : 50;
@@ -759,7 +814,7 @@ function updateDisplay() {
 
   buildVisualStrip(tokens);
 
-  const dot = getDotMs();
+  const dot = getTransmitDotMs();
   const totalMs = computeDurationMs(tokens, dot);
   const symbolCount = (morse.match(/[.-]/g) || []).length;
   const visibleChars = text.replace(/\s/g, '').length;
@@ -836,6 +891,8 @@ async function acquireTorch() {
       return false;
     }
     torchTrack = track;
+    torchOn = false;
+    flashIndicator.classList.remove('on');
     return true;
   } catch {
     setStatus('Camera permission denied');
@@ -845,15 +902,20 @@ async function acquireTorch() {
 
 async function setTorch(on) {
   if (!torchTrack) return;
+  if (torchOn === on) {
+    flashIndicator.classList.toggle('on', on);
+    return;
+  }
   try {
     await torchTrack.applyConstraints({ advanced: [{ torch: on }] });
+    torchOn = on;
     flashIndicator.classList.toggle('on', on);
   } catch {}
 }
 
 function releaseTorch() {
   try {
-    if (torchTrack) torchTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+    if (torchTrack && torchOn) torchTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
   } catch {}
   if (torchStream) {
     torchStream.getTracks().forEach(track => {
@@ -862,6 +924,7 @@ function releaseTorch() {
   }
   torchTrack = null;
   torchStream = null;
+  torchOn = false;
   flashIndicator.classList.remove('on');
 }
 
@@ -908,6 +971,195 @@ function buildTransmitSteps(tokens, dot) {
   return steps;
 }
 
+function sanitizeFilenamePart(text) {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'message';
+}
+
+function createWavBlobFromSamples(samples, sampleRate) {
+  const bytesPerSample = 2;
+  const blockAlign = bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = samples.length * bytesPerSample;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  function writeString(offset, value) {
+    for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const clamped = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function renderMorseAudioBuffer(steps, freqHz, sampleRate = 44100) {
+  const totalMs = steps.reduce((sum, step) => sum + step.duration, 0);
+  const totalSamples = Math.max(1, Math.ceil((totalMs / 1000) * sampleRate));
+  const samples = new Float32Array(totalSamples);
+  const amplitude = 0.55;
+  const rampSamples = Math.max(8, Math.floor(sampleRate * 0.005));
+  let cursor = 0;
+
+  for (const step of steps) {
+    const stepSamples = Math.max(1, Math.round((step.duration / 1000) * sampleRate));
+    if (step.type === 'on') {
+      for (let i = 0; i < stepSamples && cursor + i < samples.length; i++) {
+        const rampIn = Math.min(1, i / rampSamples);
+        const rampOut = Math.min(1, (stepSamples - i - 1) / rampSamples);
+        const envelope = Math.min(rampIn, rampOut, 1);
+        const t = (cursor + i) / sampleRate;
+        samples[cursor + i] = Math.sin(2 * Math.PI * freqHz * t) * amplitude * envelope;
+      }
+    }
+    cursor += stepSamples;
+  }
+
+  return samples;
+}
+
+function floatTo16BitPcm(samples) {
+  const pcm = new Int16Array(samples.length);
+  for (let i = 0; i < samples.length; i++) {
+    const clamped = Math.max(-1, Math.min(1, samples[i]));
+    pcm[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
+  }
+  return pcm;
+}
+
+function createMp3BlobFromSamples(samples, sampleRate) {
+  if (!window.lamejs?.Mp3Encoder) return null;
+
+  const encoder = new window.lamejs.Mp3Encoder(1, sampleRate, 128);
+  const pcm = floatTo16BitPcm(samples);
+  const blockSize = 1152;
+  const chunks = [];
+
+  for (let i = 0; i < pcm.length; i += blockSize) {
+    const chunk = pcm.subarray(i, Math.min(i + blockSize, pcm.length));
+    const encoded = encoder.encodeBuffer(chunk);
+    if (encoded.length) chunks.push(new Uint8Array(encoded));
+  }
+
+  const finalChunk = encoder.flush();
+  if (finalChunk.length) chunks.push(new Uint8Array(finalChunk));
+  return new Blob(chunks, { type: 'audio/mpeg' });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function clearRefPreviewState() {
+  refGrid.querySelectorAll('.ref-item.previewing').forEach(el => el.classList.remove('previewing'));
+  setActive(false);
+}
+
+async function previewRefCode(ch, code, triggerEl) {
+  if (transmitting) {
+    setStatus('Stop transmission before previewing reference audio');
+    return;
+  }
+  if (liveScanner.running) {
+    setStatus('Stop live scanner before previewing reference audio');
+    return;
+  }
+
+  const token = ++refPreviewToken;
+  stopCurrentTone();
+  clearRefPreviewState();
+  if (triggerEl) triggerEl.classList.add('previewing');
+  setStatus(`Previewing ${ch} ${code}`);
+
+  try {
+    const dot = Math.max(getDotMs(), 70);
+    for (let i = 0; i < code.length; i++) {
+      if (token !== refPreviewToken) return;
+
+      const symbol = code[i];
+      const duration = symbol === '.' ? dot : dot * 3;
+      setActive(true);
+      await playTone(duration);
+      setActive(false);
+
+      if (i < code.length - 1) {
+        await sleep(dot);
+      }
+    }
+
+    if (token === refPreviewToken) {
+      setStatus(`Preview ready: ${ch} ${code}`);
+    }
+  } finally {
+    if (token === refPreviewToken) {
+      stopCurrentTone();
+      clearRefPreviewState();
+    }
+  }
+}
+
+function saveMorseAudio() {
+  const text = textInput.value.trim();
+  if (!text) {
+    setStatus('No message to save');
+    return;
+  }
+
+  const { tokens, unsupported } = lastEncoded;
+  const validCharCount = tokens.filter(t => t.kind === 'char').length;
+  if (!validCharCount) {
+    setStatus('Nothing valid to save');
+    return;
+  }
+
+  const dot = getDotMs();
+  const steps = buildTransmitSteps(tokens, dot);
+  const freqHz = parseInt(freqSlider.value, 10);
+  const sampleRate = 44100;
+  const samples = renderMorseAudioBuffer(steps, freqHz, sampleRate);
+  const mp3Blob = createMp3BlobFromSamples(samples, sampleRate);
+  const baseName = `morse-${sanitizeFilenamePart(text)}-${wpmSlider.value}wpm-${freqHz}hz`;
+
+  if (mp3Blob) {
+    downloadBlob(mp3Blob, `${baseName}.mp3`);
+    setStatus(unsupported.length ? 'Saved MP3 with supported characters only' : 'Saved MP3 file');
+    return;
+  }
+
+  const wavBlob = createWavBlobFromSamples(samples, sampleRate);
+  downloadBlob(wavBlob, `${baseName}.wav`);
+  setStatus(unsupported.length ? 'MP3 unavailable, saved WAV with supported characters only' : 'MP3 unavailable, saved WAV file');
+}
+
 async function transmit() {
   if (transmitting) return;
   const text = textInput.value.trim();
@@ -930,17 +1182,27 @@ async function transmit() {
   btnTransmit.classList.add('transmitting');
   textInput.disabled = true;
 
-  const dot = getDotMs();
-  const steps = buildTransmitSteps(tokens, dot);
-
   try {
+    let useTorch = togFlash.checked;
     if (togFlash.checked) {
       setStatus('Requesting camera...');
       const ok = await acquireTorch();
-      if (!ok) togFlash.checked = false;
+      if (!ok) {
+        togFlash.checked = false;
+        useTorch = false;
+        flashWarning.classList.remove('visible');
+        updateDisplay();
+      }
     }
 
-    setStatus(unsupported.length ? 'Transmitting supported characters only...' : 'Transmitting...');
+    const dot = getTransmitDotMs(useTorch);
+    const steps = buildTransmitSteps(tokens, dot);
+    const slowedForTorch = useTorch && dot > getDotMs();
+    setStatus(
+      unsupported.length
+        ? (slowedForTorch ? 'Transmitting supported characters only... Flash slowed for reliability.' : 'Transmitting supported characters only...')
+        : (slowedForTorch ? 'Transmitting... Flash slowed for reliability.' : 'Transmitting...')
+    );
 
     for (const step of steps) {
       if (stopRequested) break;
@@ -958,6 +1220,7 @@ async function transmit() {
   } finally {
     stopCurrentTone();
     await signalOff();
+    if (torchTrack) await sleep(60);
     releaseTorch();
     transmitting = false;
     btnTransmit.style.display = '';
@@ -1002,60 +1265,97 @@ function updateDecode(raw) {
     decodeOutput.textContent = decoded;
     decodeOutput.classList.remove('empty');
   } else {
-    decodeOutput.textContent = 'Enter morse code below...';
+    decodeOutput.textContent = 'Enter dots and dashes below...';
     decodeOutput.classList.add('empty');
   }
 }
 
-function syncTypedMorse() {
-  tapMorse = normaliseManualMorse(morseTyped.value);
-  morseTyped.value = tapMorse;
+function clearTapGapTimers() {
+  if (tapLetterGapTimer) clearTimeout(tapLetterGapTimer);
+  if (tapWordGapTimer) clearTimeout(tapWordGapTimer);
+  tapLetterGapTimer = null;
+  tapWordGapTimer = null;
+}
+
+function getTapGapDurations() {
+  const dot = Math.max(getDotMs(), 70);
+  return {
+    letter: Math.max(240, Math.round(dot * 3.15)),
+    word: Math.max(620, Math.round(dot * 7.1))
+  };
+}
+
+function appendTapLetterGap() {
+  if (!tapMorse) return;
+  tapMorse = tapMorse.replace(/\s+$/, '');
+  if (!tapMorse.endsWith(' / ')) tapMorse += ' ';
+}
+
+function appendTapWordGap() {
+  if (!tapMorse) return;
+  tapMorse = tapMorse.replace(/\s*\/?\s*$/, '');
+  tapMorse += ' / ';
+}
+
+function syncTapDecode() {
   updateDecode(tapMorse);
 }
 
-document.getElementById('tap-dot').addEventListener('click', () => {
-  tapMorse += '.';
-  morseTyped.value = tapMorse;
-  updateDecode(tapMorse);
-});
+function scheduleTapGapTimers() {
+  clearTapGapTimers();
+  const gaps = getTapGapDurations();
+  tapLetterGapTimer = setTimeout(() => {
+    appendTapLetterGap();
+    syncTapDecode();
+    tapLetterGapTimer = null;
+  }, gaps.letter);
+  tapWordGapTimer = setTimeout(() => {
+    appendTapWordGap();
+    syncTapDecode();
+    tapWordGapTimer = null;
+  }, gaps.word);
+}
 
-document.getElementById('tap-dash').addEventListener('click', () => {
-  tapMorse += '-';
-  morseTyped.value = tapMorse;
-  updateDecode(tapMorse);
-});
+function appendTapSymbol(symbol) {
+  const now = performance.now();
+  const gaps = getTapGapDurations();
+  const idle = tapLastInputAt ? now - tapLastInputAt : 0;
 
-document.getElementById('tap-space').addEventListener('click', () => {
-  tapMorse = tapMorse.replace(/\s+$/, '');
-  if (tapMorse && !tapMorse.endsWith(' /')) tapMorse += ' ';
-  morseTyped.value = tapMorse;
-  updateDecode(tapMorse);
-});
+  clearTapGapTimers();
 
-document.getElementById('tap-word').addEventListener('click', () => {
-  tapMorse = tapMorse.replace(/\s*\/?\s*$/, '');
-  if (tapMorse) tapMorse += ' / ';
-  morseTyped.value = tapMorse;
-  updateDecode(tapMorse);
-});
+  if (tapMorse) {
+    if (idle >= gaps.word) appendTapWordGap();
+    else if (idle >= gaps.letter) appendTapLetterGap();
+  }
+
+  tapMorse += symbol;
+  tapLastInputAt = now;
+  syncTapDecode();
+  scheduleTapGapTimers();
+}
+
+document.getElementById('tap-dot').addEventListener('click', () => appendTapSymbol('.'));
+
+document.getElementById('tap-dash').addEventListener('click', () => appendTapSymbol('-'));
 
 document.getElementById('tap-back').addEventListener('click', () => {
+  clearTapGapTimers();
   if (tapMorse.endsWith(' / ')) tapMorse = tapMorse.slice(0, -3);
   else if (tapMorse.endsWith(' ')) tapMorse = tapMorse.slice(0, -1);
   else tapMorse = tapMorse.slice(0, -1);
-  morseTyped.value = tapMorse;
-  updateDecode(tapMorse);
+  tapLastInputAt = performance.now();
+  syncTapDecode();
+  if (tapMorse) scheduleTapGapTimers();
 });
 
 document.getElementById('tap-clr').addEventListener('click', () => {
+  clearTapGapTimers();
   tapMorse = '';
-  morseTyped.value = '';
-  decodeOutput.textContent = 'Enter morse code below...';
+  tapLastInputAt = 0;
+  decodeOutput.textContent = 'Enter dots and dashes below...';
   decodeOutput.classList.add('empty');
   morseLive.innerHTML = '<span class="cursor"></span>';
 });
-
-morseTyped.addEventListener('input', syncTypedMorse);
 
 document.getElementById('btn-copy-decoded').addEventListener('click', async () => {
   const txt = decodeOutput.textContent;
@@ -1094,9 +1394,18 @@ function resetLiveScannerState() {
   liveScanner.gapLevel = 0;
   liveScanner.hasSignal = false;
   liveScanner.bandNoise = 0.0005;
+  liveScanner.audioBandSmooth = 0;
+  liveScanner.audioRatioSmooth = 1;
+  liveScanner.audioFloor = 0.0005;
+  liveScanner.audioRmsFloor = 0.003;
+  liveScanner.audioRmsSmooth = 0;
+  liveScanner.audioStateLatch = false;
   liveScanner.lightBaseline = 0;
   liveScanner.lightSmoothed = 0;
+  liveScanner.lightContrastBaseline = 0;
+  liveScanner.lightContrastSmoothed = 0;
   liveScanner.lightStateLatch = false;
+  liveScanner.calibratingUntil = performance.now() + 900;
   liveScanMorse.textContent = 'Waiting for live input...';
   liveScanMorse.classList.add('empty');
   liveScanOutput.textContent = 'Decoded live text will appear here...';
@@ -1195,10 +1504,14 @@ function updateScannerSignal(isOn, stateLabel) {
   if (isOn === liveScanner.lastState) return;
 
   const duration = now - liveScanner.lastChange;
+  const minPulseMs = Math.max(45, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.45, 120));
+  const minGapMs = Math.max(30, minPulseMs * 0.65);
   if (liveScanner.lastState) {
-    commitToneDuration(duration);
-    liveScanner.hasSignal = true;
-  } else if (liveScanner.hasSignal) {
+    if (duration >= minPulseMs) {
+      commitToneDuration(duration);
+      liveScanner.hasSignal = true;
+    }
+  } else if (liveScanner.hasSignal && duration >= minGapMs) {
     commitGapDuration(duration);
   }
 
@@ -1233,6 +1546,7 @@ function cleanupLiveMedia() {
     liveScanner.audioCtx = null;
   }
   liveScanner.freqData = null;
+  liveScanner.timeData = null;
 }
 
 async function stopLiveScanner() {
@@ -1241,7 +1555,8 @@ async function stopLiveScanner() {
 
   const now = performance.now();
   if (liveScanner.lastChange) {
-    if (liveScanner.lastState) commitToneDuration(now - liveScanner.lastChange);
+    const minPulseMs = Math.max(45, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.45, 120));
+    if (liveScanner.lastState && now - liveScanner.lastChange >= minPulseMs) commitToneDuration(now - liveScanner.lastChange);
     else maybeCommitIdleGap(now + liveScanner.dotEstimate * 6);
   }
 
@@ -1253,19 +1568,21 @@ async function stopLiveScanner() {
   setStatus('Live scanner stopped');
 }
 
-function detectToneBand(analyser, freqData) {
+function detectToneBand(analyser, freqData, timeData) {
   analyser.getFloatFrequencyData(freqData);
+  analyser.getByteTimeDomainData(timeData);
 
   const sampleRate = liveScanner.audioCtx.sampleRate;
   const targetFreq = parseInt(freqSlider.value, 10);
   const nyquist = sampleRate / 2;
   const targetBin = Math.round((targetFreq / nyquist) * (freqData.length - 1));
-  const bandRadius = 2;
+  const bandRadius = 3;
 
   let band = 0;
   let side = 0;
   let bandCount = 0;
   let sideCount = 0;
+  let rms = 0;
 
   for (let i = Math.max(0, targetBin - bandRadius); i <= Math.min(freqData.length - 1, targetBin + bandRadius); i++) {
     band += Math.pow(10, freqData[i] / 20);
@@ -1288,14 +1605,45 @@ function detectToneBand(analyser, freqData) {
 
   band /= Math.max(1, bandCount);
   side /= Math.max(1, sideCount);
+  for (let i = 0; i < timeData.length; i++) {
+    const sample = (timeData[i] - 128) / 128;
+    rms += sample * sample;
+  }
+  rms = Math.sqrt(rms / Math.max(1, timeData.length));
 
-  if (!liveScanner.lastState) {
-    liveScanner.bandNoise = liveScanner.bandNoise * 0.96 + side * 0.04;
+  if (!liveScanner.audioBandSmooth) liveScanner.audioBandSmooth = band;
+  if (!liveScanner.audioRmsSmooth) liveScanner.audioRmsSmooth = rms;
+
+  liveScanner.audioBandSmooth = liveScanner.audioBandSmooth * 0.62 + band * 0.38;
+  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth * 0.72 + rms * 0.28;
+
+  if (!liveScanner.audioStateLatch) {
+    liveScanner.bandNoise = liveScanner.bandNoise * 0.95 + side * 0.05;
+    liveScanner.audioFloor = liveScanner.audioFloor * 0.96 + Math.min(liveScanner.audioBandSmooth, side) * 0.04;
+    liveScanner.audioRmsFloor = liveScanner.audioRmsFloor * 0.97 + liveScanner.audioRmsSmooth * 0.03;
   }
 
-  const ratio = band / Math.max(side, liveScanner.bandNoise, 0.00001);
-  const on = ratio > 3.0 && band > 0.0035;
-  return { on, ratio, band };
+  const floor = Math.max(side, liveScanner.bandNoise, liveScanner.audioFloor, 0.00002);
+  const ratio = liveScanner.audioBandSmooth / floor;
+  liveScanner.audioRatioSmooth = liveScanner.audioRatioSmooth * 0.58 + ratio * 0.42;
+
+  if (performance.now() < liveScanner.calibratingUntil) {
+    liveScanner.audioStateLatch = false;
+    return { on: false, label: 'Calibrating mic' };
+  }
+
+  const minRms = Math.max(liveScanner.audioRmsFloor * 1.22, 0.0075);
+  const onThreshold = liveScanner.audioRatioSmooth > 2.15
+    && liveScanner.audioBandSmooth > floor * 1.55
+    && liveScanner.audioRmsSmooth > minRms;
+  const offThreshold = liveScanner.audioRatioSmooth < 1.45
+    || liveScanner.audioBandSmooth < floor * 1.18
+    || liveScanner.audioRmsSmooth < Math.max(liveScanner.audioRmsFloor * 1.04, 0.0045);
+
+  if (!liveScanner.audioStateLatch && onThreshold) liveScanner.audioStateLatch = true;
+  if (liveScanner.audioStateLatch && offThreshold) liveScanner.audioStateLatch = false;
+
+  return { on: liveScanner.audioStateLatch, label: liveScanner.audioStateLatch ? 'Tone locked' : 'Listening' };
 }
 
 async function startAudioScanner() {
@@ -1323,33 +1671,45 @@ async function startAudioScanner() {
   liveScanner.analyser = analyser;
   liveScanner.source = source;
   liveScanner.freqData = new Float32Array(analyser.frequencyBinCount);
+  liveScanner.timeData = new Uint8Array(analyser.fftSize);
 
   const loop = () => {
     if (!liveScanner.running || liveScanner.mode !== 'audio' || !liveScanner.analyser) return;
-    const info = detectToneBand(analyser, liveScanner.freqData);
-    updateScannerSignal(info.on, info.on ? 'Tone locked' : 'Listening');
+    const info = detectToneBand(analyser, liveScanner.freqData, liveScanner.timeData);
+    updateScannerSignal(info.on, info.label);
     liveScanner.rafId = requestAnimationFrame(loop);
   };
   loop();
   return true;
 }
 
-function centerBrightness(frame, width, height) {
-  const startX = Math.floor(width * 0.25);
-  const endX = Math.floor(width * 0.75);
-  const startY = Math.floor(height * 0.25);
-  const endY = Math.floor(height * 0.75);
+function sampleLightRegions(frame, width, height) {
+  const centerStartX = Math.floor(width * 0.34);
+  const centerEndX = Math.floor(width * 0.66);
+  const centerStartY = Math.floor(height * 0.34);
+  const centerEndY = Math.floor(height * 0.66);
 
-  let total = 0;
-  let count = 0;
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
+  let centerTotal = 0;
+  let centerCount = 0;
+  let outerTotal = 0;
+  let outerCount = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
-      total += frame[i] * 0.299 + frame[i + 1] * 0.587 + frame[i + 2] * 0.114;
-      count++;
+      const brightness = frame[i] * 0.299 + frame[i + 1] * 0.587 + frame[i + 2] * 0.114;
+      const inCenter = x >= centerStartX && x < centerEndX && y >= centerStartY && y < centerEndY;
+      if (inCenter) {
+        centerTotal += brightness;
+        centerCount++;
+      } else {
+        outerTotal += brightness;
+        outerCount++;
+      }
     }
   }
-  return total / Math.max(1, count);
+  const center = centerTotal / Math.max(1, centerCount);
+  const outer = outerTotal / Math.max(1, outerCount);
+  return { center, outer, contrast: center - outer };
 }
 
 async function startLightScanner() {
@@ -1381,23 +1741,42 @@ async function startLightScanner() {
     if (liveScanVideo.readyState >= 2) {
       ctx.drawImage(liveScanVideo, 0, 0, canvas.width, canvas.height);
       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      const brightness = centerBrightness(frame, canvas.width, canvas.height);
+      const sample = sampleLightRegions(frame, canvas.width, canvas.height);
+      const brightness = sample.center;
+      const contrast = sample.contrast;
 
       if (!liveScanner.lightBaseline) liveScanner.lightBaseline = brightness;
       if (!liveScanner.lightSmoothed) liveScanner.lightSmoothed = brightness;
+      if (!liveScanner.lightContrastBaseline) liveScanner.lightContrastBaseline = contrast;
+      if (!liveScanner.lightContrastSmoothed) liveScanner.lightContrastSmoothed = contrast;
 
-      liveScanner.lightSmoothed = liveScanner.lightSmoothed * 0.7 + brightness * 0.3;
+      liveScanner.lightSmoothed = liveScanner.lightSmoothed * 0.72 + brightness * 0.28;
+      liveScanner.lightContrastSmoothed = liveScanner.lightContrastSmoothed * 0.68 + contrast * 0.32;
 
       if (!liveScanner.lightStateLatch) {
-        liveScanner.lightBaseline = liveScanner.lightBaseline * 0.96 + liveScanner.lightSmoothed * 0.04;
+        liveScanner.lightBaseline = liveScanner.lightBaseline * 0.965 + liveScanner.lightSmoothed * 0.035;
+        liveScanner.lightContrastBaseline = liveScanner.lightContrastBaseline * 0.94 + liveScanner.lightContrastSmoothed * 0.06;
       }
 
-      const baseline = liveScanner.lightBaseline;
-      const onThreshold = baseline + 18;
-      const offThreshold = baseline + 8;
+      if (performance.now() < liveScanner.calibratingUntil) {
+        updateScannerSignal(false, 'Calibrating camera');
+        liveScanner.rafId = requestAnimationFrame(loop);
+        return;
+      }
 
-      if (!liveScanner.lightStateLatch && liveScanner.lightSmoothed > onThreshold) liveScanner.lightStateLatch = true;
-      if (liveScanner.lightStateLatch && liveScanner.lightSmoothed < offThreshold) liveScanner.lightStateLatch = false;
+      const brightnessDelta = liveScanner.lightSmoothed - liveScanner.lightBaseline;
+      const contrastBase = liveScanner.lightContrastBaseline;
+      const onContrast = Math.max(contrastBase + 11, 9);
+      const offContrast = Math.max(contrastBase + 4, 3.5);
+      const onBrightness = Math.max(12, Math.abs(liveScanner.lightBaseline) * 0.08);
+      const offBrightness = Math.max(5, onBrightness * 0.45);
+
+      if (!liveScanner.lightStateLatch && liveScanner.lightContrastSmoothed > onContrast && brightnessDelta > onBrightness) {
+        liveScanner.lightStateLatch = true;
+      }
+      if (liveScanner.lightStateLatch && (liveScanner.lightContrastSmoothed < offContrast || brightnessDelta < offBrightness)) {
+        liveScanner.lightStateLatch = false;
+      }
 
       updateScannerSignal(liveScanner.lightStateLatch, liveScanner.lightStateLatch ? 'Light detected' : 'Watching light');
     }
@@ -1449,8 +1828,8 @@ function buildRef() {
     ['.', '.-.-.-'], [',', '--..--'], ['?', '..--..'], ['!', '-.-.--'],
     ['/', '-..-.'], ['+', '.-.-.'], ['-', '-....-'], ['=', '-...-'], ['@', '.--.-.']
   ];
-  document.getElementById('ref-grid').innerHTML = entries
-    .map(([ch, code]) => `<div class="ref-item"><span class="ref-char">${ch}</span><span class="ref-code">${code}</span></div>`)
+  refGrid.innerHTML = entries
+    .map(([ch, code]) => `<button type="button" class="ref-item" data-char="${ch}" data-code="${code}" title="Play ${ch} ${code}"><span class="ref-char">${ch}</span><span class="ref-code">${code}</span></button>`)
     .join('');
 }
 
@@ -1520,6 +1899,7 @@ txOptionsToggle.addEventListener('click', () => toggleOptions());
 togFlash.addEventListener('change', () => {
   flashWarning.classList.toggle('visible', togFlash.checked);
   if (!togFlash.checked) releaseTorch();
+  updateDisplay();
 });
 
 btnTransmit.addEventListener('click', transmit);
@@ -1529,11 +1909,18 @@ btnStop.addEventListener('click', () => {
   releaseTorch();
   setStatus('Stopping...');
 });
+btnSaveAudio.addEventListener('click', saveMorseAudio);
 btnClear.addEventListener('click', () => {
   textInput.value = '';
   autoResizeMessageInput();
   updateDisplay();
   setStatus('Ready');
+});
+
+refGrid.addEventListener('click', (event) => {
+  const btn = event.target.closest('.ref-item');
+  if (!btn) return;
+  previewRefCode(btn.dataset.char, btn.dataset.code, btn);
 });
 
 scanModeAudioBtn.addEventListener('click', () => setScanMode('audio'));
