@@ -1,4 +1,4 @@
-const CACHE = 'morse-v3';
+const CACHE = 'morse-v4';
 const ASSETS = [
   './',
   './index.html',
