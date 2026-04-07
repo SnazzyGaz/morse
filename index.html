@@ -80,6 +80,24 @@ textarea:focus { border-color: var(--amber-dim); }
   overflow-x: auto; padding: 4px 0; scrollbar-width: none;
 }
 .morse-strip::-webkit-scrollbar { display: none; }
+#morse-display,
+.morse-live,
+.live-scan-morse {
+  display:block;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  white-space:nowrap;
+  word-break:normal;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+}
+#morse-display::-webkit-scrollbar,
+.morse-live::-webkit-scrollbar,
+.live-scan-morse::-webkit-scrollbar { display:none; }
+section, .decode-out-box, .live-scan-box, .btn-row, .mode-row, .slider-row, .toggle-row { min-width:0; }
+button { min-width:0; }
 .symbol { height: 12px; border-radius: 2px; background: var(--border); flex-shrink: 0; transition: background 0.05s; }
 .symbol.dot { width: 10px; }
 .symbol.dash { width: 28px; }
@@ -203,6 +221,21 @@ textarea.morse-typed:focus { border-color: var(--amber-dim); }
 .decode-output.live { min-height:1.9rem; }
 .scanner-hint { font-size:0.62rem; color:var(--text-dim); line-height:1.7; letter-spacing:0.03em; margin-top:0.55rem; }
 .scanner-hidden-media { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
+
+@media (max-width: 600px) {
+  header { padding: 0.9rem 1rem 0.7rem; }
+  section { padding: 0.8rem 1rem; }
+  .status-bar { padding: 0.45rem 1rem; }
+  .controls { grid-template-columns: 1fr; }
+  .btn-row { gap: 0.5rem; }
+  .tap-pad { grid-template-columns: 1fr 1fr; }
+  .tap-btn.clr-decode { grid-column: span 2 !important; }
+  textarea { min-height: 68px; font-size: 1rem; }
+  textarea.morse-typed { min-height: 50px; font-size: 0.95rem; }
+  .decode-output { font-size: 1.05rem; }
+  .live-scan-box, .decode-out-box { padding: 0.65rem 0.8rem; }
+  .morse-strip { padding-bottom: 2px; }
+}
 
 </style>
 </head>
