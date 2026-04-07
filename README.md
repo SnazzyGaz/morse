@@ -10,26 +10,7 @@ A small browser-based Morse code app for encoding, decoding, transmitting, scann
 - Live scan Morse from microphone tone or camera light
 - Save generated Morse audio as MP3, with WAV fallback
 - Install on phone as a standalone web app
-- Works basically offline once loaded/installed
 
-## Files
-
-- `index.html` - main app UI and logic
-- `manifest.json` - PWA manifest for installability
-- `sw.js` - service worker for offline caching
-- `lame.min.js` - local MP3 encoder
-- `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` - app icons
-
-## Running It
-
-Open `index.html` in a browser for basic use.
-
-For best results on phone and for install prompts:
-
-- serve it over HTTPS, or
-- use a local/dev server that your phone browser accepts
-
-Some browser features, especially camera torch access and install behavior, are more reliable over HTTPS.
 
 ## Installing On Phone
 
@@ -48,7 +29,6 @@ iPhone:
 
 - MP3 export is generated locally in the browser
 - If MP3 encoding is unavailable for any reason, the app falls back to WAV
-- Google Fonts are still referenced online, so if those were not already loaded the app may fall back to system fonts when offline
 
 ## Development
 
