@@ -79,6 +79,19 @@ textarea.morse-typed::placeholder { color: var(--text-dim); }
 textarea:focus,
 textarea.morse-typed:focus { border-color: var(--amber-dim); }
 
+/* one-line expanding message field */
+.message-input {
+  min-height: 50px;
+  height: 50px;
+  max-height: 180px;
+  overflow-y: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 #morse-display {
   display: block;
   max-width: 100%;
@@ -190,6 +203,50 @@ button:active { transform: scale(0.97); }
 .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
 #status-text { flex: 1; }
 
+/* collapsible options */
+.options-box {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface2);
+  overflow: hidden;
+}
+.options-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-family: var(--display);
+  font-size: 0.62rem;
+}
+.options-toggle .summary {
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  margin-left: auto;
+}
+.options-toggle .chev {
+  color: var(--amber);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+.options-box.open .options-toggle .chev { transform: rotate(180deg); }
+.options-panel {
+  display: none;
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+.options-box.open .options-panel { display: block; }
+
 /* Decoder */
 .decode-out-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem 1rem; min-height: 3.5rem; }
 .decode-output { font-size: 1.25rem; color: var(--amber); line-height: 1.5; word-break: break-word; letter-spacing: 0.05em; }
@@ -259,10 +316,12 @@ button:active { transform: scale(0.97); }
   .btn-row { gap: 0.5rem; }
   .tap-pad { grid-template-columns: 1fr 1fr; }
   .tap-btn.clr-decode { grid-column: span 2 !important; }
-  textarea { min-height: 68px; font-size: 1rem; }
   textarea.morse-typed { min-height: 50px; font-size: 0.95rem; }
+  .message-input { min-height: 46px; height: 46px; }
   .decode-output { font-size: 1.05rem; }
   .live-scan-box, .decode-out-box { padding: 0.65rem 0.8rem; }
+  .options-toggle { padding: 0.75rem 0.85rem; }
+  .options-panel { padding: 0 0.85rem 0.85rem; }
 }
 </style>
 </head>
@@ -287,7 +346,7 @@ button:active { transform: scale(0.97); }
 <div class="tab-panel active" id="tab-transmit">
   <section>
     <div class="section-label">Message</div>
-    <textarea id="text-input" placeholder="Type your message..." rows="3" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    <textarea id="text-input" class="message-input" placeholder="Type your message..." rows="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
   </section>
 
   <section>
@@ -306,56 +365,65 @@ button:active { transform: scale(0.97); }
   </section>
 
   <section>
-    <div class="section-label">Speed &amp; Tone</div>
-    <div class="controls">
-      <div class="control-group">
-        <div class="control-label">Speed (WPM)</div>
-        <div class="slider-row">
-          <input type="range" id="wpm" min="5" max="40" value="15" step="1">
-          <span class="slider-val" id="wpm-val">15</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <div class="control-label">Frequency</div>
-        <div class="slider-row">
-          <input type="range" id="freq" min="300" max="1200" value="700" step="50">
-          <span class="slider-val" id="freq-val">700Hz</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="section-label">Output Channels</div>
-    <div class="toggle-group">
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="toggle-name">Audio Tone</div>
-          <div class="toggle-desc">CW beep via speaker</div>
-        </div>
-        <label class="toggle"><input type="checkbox" id="tog-audio" checked><div class="toggle-track"></div></label>
-      </div>
-
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="flash-row">
-            <div class="toggle-name">Camera Flash</div>
-            <div class="flash-indicator" id="flash-indicator"></div>
+    <div class="section-label">Options</div>
+    <div class="options-box" id="tx-options-box">
+      <button class="options-toggle" id="tx-options-toggle" aria-expanded="false" type="button">
+        <span>Speed · Tone · Output</span>
+        <span class="summary" id="tx-options-summary">15 WPM · 700Hz</span>
+        <span class="chev">⌄</span>
+      </button>
+      <div class="options-panel" id="tx-options-panel">
+        <div style="padding-top:0.9rem">
+          <div class="controls" style="margin-bottom:1rem">
+            <div class="control-group">
+              <div class="control-label">Speed (WPM)</div>
+              <div class="slider-row">
+                <input type="range" id="wpm" min="5" max="40" value="15" step="1">
+                <span class="slider-val" id="wpm-val">15</span>
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="control-label">Frequency</div>
+              <div class="slider-row">
+                <input type="range" id="freq" min="300" max="1200" value="700" step="50">
+                <span class="slider-val" id="freq-val">700Hz</span>
+              </div>
+            </div>
           </div>
-          <div class="toggle-desc">Torch LED via rear camera</div>
-        </div>
-        <label class="toggle"><input type="checkbox" id="tog-flash"><div class="toggle-track"></div></label>
-      </div>
 
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <div class="toggle-name">Screen Flash</div>
-          <div class="toggle-desc">White screen blink</div>
+          <div class="toggle-group">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Audio Tone</div>
+                <div class="toggle-desc">CW beep via speaker</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="tog-audio" checked><div class="toggle-track"></div></label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="flash-row">
+                  <div class="toggle-name">Camera Flash</div>
+                  <div class="flash-indicator" id="flash-indicator"></div>
+                </div>
+                <div class="toggle-desc">Torch LED via rear camera</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="tog-flash"><div class="toggle-track"></div></label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Screen Flash</div>
+                <div class="toggle-desc">White screen blink</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="tog-screen"><div class="toggle-track"></div></label>
+            </div>
+          </div>
+
+          <div class="warning" id="flash-warning">Camera flash requires HTTPS and a supported browser with torch API access. Enabling it will request camera permission when you transmit.</div>
         </div>
-        <label class="toggle"><input type="checkbox" id="tog-screen"><div class="toggle-track"></div></label>
       </div>
     </div>
-    <div class="warning" id="flash-warning">Camera flash requires HTTPS and a supported browser with torch API access. Enabling it will request camera permission when you transmit.</div>
   </section>
 
   <section>
@@ -512,6 +580,10 @@ const statChars = document.getElementById('stat-chars');
 const statSymbols = document.getElementById('stat-symbols');
 const statDuration = document.getElementById('stat-duration');
 
+const txOptionsBox = document.getElementById('tx-options-box');
+const txOptionsToggle = document.getElementById('tx-options-toggle');
+const txOptionsSummary = document.getElementById('tx-options-summary');
+
 const decodeOutput = document.getElementById('decode-output');
 const morseLive = document.getElementById('morse-live');
 const morseTyped = document.getElementById('morse-typed');
@@ -537,6 +609,11 @@ let torchStream = null;
 let symbolEls = [];
 let lastEncoded = { tokens: [], morse: '', unsupported: [] };
 let tapMorse = '';
+
+let messagePointerStartY = 0;
+let messagePointerStartX = 0;
+let messagePointerMoved = false;
+let suppressNextFocus = false;
 
 const liveScanner = {
   mode: 'audio',
@@ -566,6 +643,25 @@ function setActive(on) {
 }
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function getDotMs() { return Math.round(1200 / parseInt(wpmSlider.value, 10)); }
+
+function autoResizeMessageInput() {
+  const minHeight = window.innerWidth <= 600 ? 46 : 50;
+  const maxHeight = 180;
+  textInput.style.height = minHeight + 'px';
+  const nextHeight = Math.min(textInput.scrollHeight, maxHeight);
+  textInput.style.height = nextHeight + 'px';
+  textInput.style.overflowY = textInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+function updateOptionsSummary() {
+  txOptionsSummary.textContent = `${wpmSlider.value} WPM · ${freqSlider.value}Hz`;
+}
+
+function toggleOptions(forceOpen) {
+  const willOpen = typeof forceOpen === 'boolean' ? forceOpen : !txOptionsBox.classList.contains('open');
+  txOptionsBox.classList.toggle('open', willOpen);
+  txOptionsToggle.setAttribute('aria-expanded', String(willOpen));
+}
 
 function encodeText(text) {
   const upper = text.toUpperCase();
@@ -975,6 +1071,7 @@ document.getElementById('btn-copy-decoded').addEventListener('click', async () =
 document.getElementById('btn-send-to-tx').addEventListener('click', () => {
   if (decodeOutput.classList.contains('empty')) return;
   textInput.value = decodeOutput.textContent;
+  autoResizeMessageInput();
   updateDisplay();
   document.querySelector('[data-tab="transmit"]').click();
   setStatus('Loaded into transmitter');
@@ -1160,7 +1257,6 @@ function detectToneBand(analyser, freqData) {
   analyser.getFloatFrequencyData(freqData);
 
   const sampleRate = liveScanner.audioCtx.sampleRate;
-  const fftSize = analyser.fftSize;
   const targetFreq = parseInt(freqSlider.value, 10);
   const nyquist = sampleRate / 2;
   const targetBin = Math.round((targetFreq / nyquist) * (freqData.length - 1));
@@ -1367,14 +1463,59 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-textInput.addEventListener('input', updateDisplay);
-wpmSlider.addEventListener('input', () => {
-  wpmVal.textContent = wpmSlider.value;
+textInput.addEventListener('input', () => {
+  autoResizeMessageInput();
   updateDisplay();
 });
+
+textInput.addEventListener('pointerdown', (e) => {
+  messagePointerStartY = e.clientY;
+  messagePointerStartX = e.clientX;
+  messagePointerMoved = false;
+  suppressNextFocus = false;
+});
+
+textInput.addEventListener('pointermove', (e) => {
+  const dy = Math.abs(e.clientY - messagePointerStartY);
+  const dx = Math.abs(e.clientX - messagePointerStartX);
+
+  if (dy > 10 || dx > 10) {
+    messagePointerMoved = true;
+  }
+
+  if (dy > 14 && dy > dx) {
+    suppressNextFocus = true;
+    textInput.blur();
+  }
+}, { passive: true });
+
+textInput.addEventListener('click', (e) => {
+  if (messagePointerMoved) {
+    e.preventDefault();
+    suppressNextFocus = true;
+    textInput.blur();
+  }
+});
+
+textInput.addEventListener('focus', () => {
+  if (suppressNextFocus) {
+    requestAnimationFrame(() => textInput.blur());
+    suppressNextFocus = false;
+  }
+});
+
+wpmSlider.addEventListener('input', () => {
+  wpmVal.textContent = wpmSlider.value;
+  updateOptionsSummary();
+  updateDisplay();
+});
+
 freqSlider.addEventListener('input', () => {
   freqVal.textContent = freqSlider.value + 'Hz';
+  updateOptionsSummary();
 });
+
+txOptionsToggle.addEventListener('click', () => toggleOptions());
 
 togFlash.addEventListener('change', () => {
   flashWarning.classList.toggle('visible', togFlash.checked);
@@ -1390,6 +1531,7 @@ btnStop.addEventListener('click', () => {
 });
 btnClear.addEventListener('click', () => {
   textInput.value = '';
+  autoResizeMessageInput();
   updateDisplay();
   setStatus('Ready');
 });
@@ -1408,6 +1550,8 @@ window.addEventListener('beforeunload', () => {
   stopCurrentTone();
 });
 
+autoResizeMessageInput();
+updateOptionsSummary();
 updateDisplay();
 buildRef();
 setStatus('Ready');
