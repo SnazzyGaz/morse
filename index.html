@@ -372,28 +372,12 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div id="audio-scanner-options" style="margin-bottom:0.75rem">
-      <div class="controls">
-        <div class="control-group">
-          <div class="control-label">Listen Freq (Hz)</div>
-          <div class="slider-row">
-            <input type="range" id="scan-freq" min="300" max="1200" value="700" step="25">
-            <span class="slider-val" id="scan-freq-val">700Hz</span>
-          </div>
+      <div class="control-group">
+        <div class="control-label">Sensitivity</div>
+        <div class="slider-row">
+          <input type="range" id="scan-sens" min="1" max="10" value="5" step="1">
+          <span class="slider-val" id="scan-sens-val">5</span>
         </div>
-        <div class="control-group">
-          <div class="control-label">Sensitivity</div>
-          <div class="slider-row">
-            <input type="range" id="scan-sens" min="1" max="10" value="5" step="1">
-            <span class="slider-val" id="scan-sens-val">5</span>
-          </div>
-        </div>
-      </div>
-      <div class="toggle-row" style="margin-top:0.6rem">
-        <div class="toggle-info">
-          <div class="toggle-name">Auto-detect frequency</div>
-          <div class="toggle-desc">Find strongest tone automatically</div>
-        </div>
-        <label class="toggle"><input type="checkbox" id="tog-auto-freq" checked><div class="toggle-track"></div></label>
       </div>
     </div>
 
@@ -425,7 +409,7 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div class="scanner-hint">
-      Audio mode uses a Goertzel tone detector — very fast, no smearing. For best results keep the sending device at moderate volume near the mic. Auto-detect finds the tone automatically; or set frequency manually to match the transmitter.
+      Automatically finds and locks to the strongest stable tone in the 300–1200Hz range. Works with any Morse transmitter frequency. Keep sending device at moderate volume near the mic for best results.
     </div>
 
     <video id="live-scan-video" class="scanner-hidden-media" playsinline muted></video>
@@ -532,11 +516,8 @@ const liveScanQualityFill = $('live-scan-quality-fill');
 const liveScanVideo = $('live-scan-video');
 const liveScanCanvas = $('live-scan-canvas');
 const refGrid = $('ref-grid');
-const scanFreqSlider = $('scan-freq');
-const scanFreqVal = $('scan-freq-val');
 const scanSensSlider = $('scan-sens');
 const scanSensVal = $('scan-sens-val');
-const togAutoFreq = $('tog-auto-freq');
 const freqBadge = $('freq-badge');
 const threshInfo = $('thresh-info');
 const audioScannerOptions = $('audio-scanner-options');
@@ -572,9 +553,7 @@ const G = {
   frameBuffer: null,
   frameFill: 0,
 
-  // Frequency detection
-  targetFreq: 700,
-  autoDetect: true,
+  // Frequency detection — always auto
   detectedFreq: 0,
 
   // Scan band for auto-detect (300–1200 Hz, 25 Hz steps)
@@ -582,8 +561,7 @@ const G = {
 
   // Adaptive noise floor
   noiseFloor: 0,
-  noiseAlpha: 0.005,
-  noiseFastAlpha: 0.15,
+  noiseFrameCount: 0,
 
   // Signal state machine
   sensitivity: 5,
@@ -636,50 +614,58 @@ function goertzel(samples, startIdx, count, freq, sampleRate) {
 }
 
 function computeSensitivityThresholds() {
+  // sensitivity 1 = needs strong signal (SNR ~5x), 10 = picks up faint tones (SNR ~1.3x)
+  // Real speaker-to-mic morse sits around 2-4x SNR in a typical room
   const s = G.sensitivity;
-  G.SNR_ON  = 12 - s * 0.9;
-  G.SNR_OFF = 6  - s * 0.4;
-  if (G.SNR_OFF >= G.SNR_ON) G.SNR_OFF = G.SNR_ON * 0.75;
+  G.SNR_ON  = 5.5 - s * 0.42;   // 5.08 at sens=1, 1.30 at sens=10
+  G.SNR_OFF = G.SNR_ON * 0.62;  // hysteresis: once on, needs to drop more to turn off
 }
 
 function processAudioFrame(samples) {
   const N = G.frameSize;
   const sr = G.sampleRate;
 
-  let targetPower = 0;
-  if (G.autoDetect && G.scanFreqs.length) {
-    let best = 0, bestFreq = G.targetFreq;
-    for (const f of G.scanFreqs) {
-      const p = goertzel(samples, 0, N, f, sr);
-      if (p > best) { best = p; bestFreq = f; }
-    }
-    if (!G.signalOn) {
-      if (G.detectedFreq === 0 || best > goertzel(samples, 0, N, G.detectedFreq, sr) * 1.5) {
-        G.detectedFreq = bestFreq;
-      }
-    }
-    targetPower = goertzel(samples, 0, N, G.detectedFreq || bestFreq, sr);
-  } else {
-    G.detectedFreq = G.targetFreq;
-    targetPower = goertzel(samples, 0, N, G.targetFreq, sr);
+  // Always scan the full band and lock to the strongest frequency
+  let best = 0, bestFreq = G.detectedFreq || 700;
+  for (const f of G.scanFreqs) {
+    const p = goertzel(samples, 0, N, f, sr);
+    if (p > best) { best = p; bestFreq = f; }
   }
 
+  // Only switch locked freq during silence, and only if new candidate is meaningfully stronger
   if (!G.signalOn) {
-    const alpha = (targetPower < G.noiseFloor * 2) ? G.noiseAlpha : G.noiseFastAlpha;
-    if (G.noiseFloor === 0) {
-      G.noiseFloor = Math.max(targetPower, 1e-10);
+    if (G.detectedFreq === 0) {
+      G.detectedFreq = bestFreq;
     } else {
-      G.noiseFloor = G.noiseFloor * (1 - alpha) + targetPower * alpha;
+      const lockedPower = goertzel(samples, 0, N, G.detectedFreq, sr);
+      if (best > lockedPower * 1.5) G.detectedFreq = bestFreq;
     }
   }
 
-  const snr = G.noiseFloor > 1e-12 ? targetPower / G.noiseFloor : 0;
+  const targetPower = goertzel(samples, 0, N, G.detectedFreq, sr);
+
+  // Adaptive noise floor — only update during confirmed silence
+  // Fast initial calibration (first ~0.5s), then slow tracking
+  if (!G.signalOn) {
+    const frameCount = G.noiseFrameCount || 0;
+    G.noiseFrameCount = frameCount + 1;
+    // Fast alpha for first 40 frames (~0.5s), then slow
+    const alpha = frameCount < 40 ? 0.15 : 0.003;
+    if (G.noiseFloor === 0) {
+      G.noiseFloor = Math.max(targetPower, 1e-12);
+    } else {
+      // Floor only creeps UP slowly, drops quickly — prevents stale high floor
+      const newFloor = G.noiseFloor * (1 - alpha) + targetPower * alpha;
+      G.noiseFloor = targetPower < G.noiseFloor ? newFloor : Math.min(newFloor, G.noiseFloor * 1.02);
+    }
+  }
+
+  const snr = G.noiseFloor > 1e-14 ? targetPower / G.noiseFloor : 0;
   G.currentSNR = snr;
 
   const isAbove = snr >= G.SNR_ON;
   const isBelow = snr < G.SNR_OFF;
 
-  const now = performance.now();
   if (isAbove && !G.rawOn) {
     G.rawOn = true;
     if (G.debounceTimer) clearTimeout(G.debounceTimer);
@@ -694,17 +680,15 @@ function processAudioFrame(samples) {
     }, G.DEBOUNCE_OFF_MS);
   }
 
-  const qualityScore = Math.min(1, Math.max(0, (snr - 1) / 15));
+  const qualityScore = Math.min(1, Math.max(0, (snr - 1) / 6));
   const qualLabel = G.signalOn
     ? (qualityScore > 0.6 ? 'Strong tone' : 'Weak tone')
-    : (qualityScore > 0.3 ? 'Signal present' : snr < 1.5 ? 'No signal' : 'Low SNR');
+    : (snr >= G.SNR_ON * 0.7 ? 'Signal present' : snr < 1.5 ? 'No signal' : 'Low SNR');
   updateQuality(qualityScore, qualLabel);
 
-  if (G.detectedFreq > 0) {
-    freqBadge.textContent = `${G.detectedFreq}Hz` + (G.autoDetect ? ' (auto)' : '');
-    freqBadge.className = 'freq-badge' + (G.signalOn ? ' locked' : '');
-  }
-  threshInfo.textContent = `SNR: ${snr.toFixed(1)}x  floor: ${G.SNR_ON.toFixed(1)}x`;
+  freqBadge.textContent = G.detectedFreq > 0 ? `${G.detectedFreq}Hz` : 'Scanning...';
+  freqBadge.className = 'freq-badge' + (G.signalOn ? ' locked' : '');
+  threshInfo.textContent = `SNR: ${snr.toFixed(1)}x  threshold: ${G.SNR_ON.toFixed(2)}x`;
 }
 
 function confirmEdge(on) {
@@ -982,13 +966,12 @@ function resetScannerState() {
   G.lastEdgeAt = 0;
   G.lightLastEdge = 0;
   G.noiseFloor = 0;
+  G.noiseFrameCount = 0;
   G.rawOn = false;
   G.currentSNR = 0;
 
   computeSensitivityThresholds();
-  G.targetFreq = parseInt(scanFreqSlider.value, 10);
-  G.autoDetect = togAutoFreq.checked;
-  G.detectedFreq = G.autoDetect ? 0 : G.targetFreq;
+  G.detectedFreq = 0;
 
   liveScanPulse.classList.remove('on');
   liveScanState.textContent = 'Idle';
@@ -1414,20 +1397,10 @@ scanModeLightBtn.addEventListener('click', () => setScanMode('light'));
 btnScanStart.addEventListener('click', startLiveScanner);
 btnScanStop.addEventListener('click', stopLiveScanner);
 
-scanFreqSlider.addEventListener('input', () => {
-  scanFreqVal.textContent = scanFreqSlider.value + 'Hz';
-  G.targetFreq = parseInt(scanFreqSlider.value, 10);
-  if (!togAutoFreq.checked) G.detectedFreq = G.targetFreq;
-});
 scanSensSlider.addEventListener('input', () => {
   scanSensVal.textContent = scanSensSlider.value;
   G.sensitivity = parseInt(scanSensSlider.value, 10);
   computeSensitivityThresholds();
-});
-togAutoFreq.addEventListener('change', () => {
-  G.autoDetect = togAutoFreq.checked;
-  scanFreqSlider.disabled = togAutoFreq.checked;
-  if (!togAutoFreq.checked) G.detectedFreq = parseInt(scanFreqSlider.value, 10);
 });
 
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.running) stopLiveScanner(); });
