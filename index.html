@@ -8,8 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Morse">
 <title>Morse Transmitter</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +71,6 @@ main {
 }
 .tab-panel { display: none; flex-direction: column; flex: 1; overflow-y: auto; }
 .tab-panel.active { display: flex; }
-section, .decode-out-box, .live-scan-box, .btn-row, .mode-row, .slider-row, .toggle-row { min-width: 0; }
 section { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
 .section-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.6rem; }
 
@@ -86,55 +83,18 @@ textarea {
 textarea { font-size: 1.1rem; min-height: 80px; }
 textarea::placeholder { color: var(--text-dim); }
 textarea:focus { border-color: var(--amber-dim); }
-
-.message-input {
-  min-height: 50px;
-  height: 50px;
-  max-height: 180px;
-  overflow-y: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-  touch-action: pan-y;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
+.message-input { min-height: 50px; height: 50px; max-height: 180px; overflow-y: hidden; }
 
 #morse-display {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
-  min-height: 2.4rem;
-  line-height: 1.6;
+  display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap;
+  scrollbar-width: none; font-size: 0.85rem; color: var(--text-dim);
+  letter-spacing: 0.1em; min-height: 2.4rem; line-height: 1.6;
 }
 #morse-display::-webkit-scrollbar { display: none; }
 #morse-display.has-code { color: var(--text); }
 
-.morse-strip {
-  display: flex; align-items: center; gap: 4px; min-height: 32px;
-  overflow-x: auto; padding: 4px 0; scrollbar-width: none;
-}
+.morse-strip { display: flex; align-items: center; gap: 4px; min-height: 32px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; }
 .morse-strip::-webkit-scrollbar { display: none; }
-
-.morse-live,
-.live-scan-morse {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.morse-live::-webkit-scrollbar,
-.live-scan-morse::-webkit-scrollbar { display: none; }
-
 .symbol { height: 12px; border-radius: 2px; background: var(--border); flex-shrink: 0; transition: background 0.05s; }
 .symbol.dot { width: 10px; }
 .symbol.dash { width: 28px; }
@@ -167,8 +127,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius
 
 .btn-row { display: flex; gap: 0.75rem; }
 button {
-  min-width: 0;
-  font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+  min-width: 0; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
   border: 1px solid var(--border); border-radius: 3px; background: var(--surface);
   color: var(--text-dim); padding: 0.6rem 1rem; cursor: pointer; transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
@@ -195,16 +154,11 @@ button:active { transform: scale(0.97); }
 .stat-val { font-family: var(--display); font-size: 0.9rem; color: var(--amber); display: block; }
 .stat-label { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; display: block; }
 
-.warning {
-  background: #1a0f00; border: 1px solid #4a3000; border-radius: 3px;
-  padding: 0.6rem 0.75rem; font-size: 0.65rem; color: #8a6020; letter-spacing: 0.05em;
-  line-height: 1.5; display: none; margin-top: 0.75rem;
-}
+.warning { background: #1a0f00; border: 1px solid #4a3000; border-radius: 3px; padding: 0.6rem 0.75rem; font-size: 0.65rem; color: #8a6020; letter-spacing: 0.05em; line-height: 1.5; display: none; margin-top: 0.75rem; }
 .warning.visible { display: block; }
 
 .status-bar {
-  width: var(--app-width);
-  padding: 0.5rem 1.5rem; font-size: 0.62rem; letter-spacing: 0.12em; color: var(--text-dim);
+  width: var(--app-width); padding: 0.5rem 1.5rem; font-size: 0.62rem; letter-spacing: 0.12em; color: var(--text-dim);
   border-top: 1px solid var(--border); display: flex; align-items: center; gap: 1rem;
   text-transform: uppercase; background: var(--surface); flex-shrink: 0;
 }
@@ -212,47 +166,16 @@ button:active { transform: scale(0.97); }
 .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
 #status-text { flex: 1; }
 
-.options-box {
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--surface2);
-  overflow: hidden;
-}
+.options-box { border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); overflow: hidden; }
 .options-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.8rem 1rem;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-family: var(--display);
-  font-size: 0.62rem;
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.8rem 1rem; border: none; border-radius: 0; background: transparent; color: var(--text);
+  text-transform: uppercase; letter-spacing: 0.14em; font-family: var(--display); font-size: 0.62rem;
 }
-.options-toggle .summary {
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: none;
-  margin-left: auto;
-}
-.options-toggle .chev {
-  color: var(--amber);
-  font-size: 0.9rem;
-  transition: transform 0.2s ease;
-}
+.options-toggle .summary { color: var(--text-dim); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: none; margin-left: auto; }
+.options-toggle .chev { color: var(--amber); font-size: 0.9rem; transition: transform 0.2s ease; }
 .options-box.open .options-toggle .chev { transform: rotate(180deg); }
-.options-panel {
-  display: none;
-  padding: 0 1rem 1rem;
-  border-top: 1px solid var(--border);
-}
+.options-panel { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
 .options-box.open .options-panel { display: block; }
 
 .decode-out-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem 1rem; min-height: 3.5rem; }
@@ -263,113 +186,44 @@ button:active { transform: scale(0.97); }
 .morse-live .cursor { display: inline-block; width: 7px; height: 0.9em; background: var(--amber); vertical-align: middle; margin-left: 2px; animation: blink 1s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-.tap-pad {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.45rem;
-  max-width: 420px;
-}
-.tap-btn {
-  min-height: 48px;
-  padding: 0.75rem 0.35rem; font-family: var(--display); font-weight: 700;
-  color: var(--text); background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 4px; cursor: pointer; transition: all 0.1s; user-select: none;
-  -webkit-tap-highlight-color: transparent; font-size: 0.78rem; line-height: 1.1;
-}
+.tap-pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.45rem; max-width: 420px; }
+.tap-btn { min-height: 48px; padding: 0.75rem 0.35rem; font-family: var(--display); font-weight: 700; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; font-size: 0.78rem; line-height: 1.1; }
 .tap-btn:active { transform: scale(0.93); background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
 .tap-btn.dot { font-size: 1.5rem; }
 .tap-btn.dash { font-size: 0.72rem; letter-spacing: 0.08em; }
 .tap-btn.backspace { font-size: 0.68rem; color: var(--text-dim); }
 .tap-btn.clr-decode { font-size: 0.56rem; letter-spacing: 0.1em; color: var(--text-dim); }
-
-.tap-hint {
-  margin-top: 0.55rem;
-  max-width: 420px;
-  font-size: 0.62rem;
-  color: var(--text-dim);
-  line-height: 1.7;
-  letter-spacing: 0.03em;
-}
+.tap-hint { margin-top: 0.55rem; max-width: 420px; font-size: 0.62rem; color: var(--text-dim); line-height: 1.7; letter-spacing: 0.03em; }
 
 .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 3px; max-height: 210px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-.ref-item {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 3px 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.12s ease;
-}
-.ref-item:hover,
-.ref-item:focus-visible {
-  border-color: var(--amber);
-  background: rgba(232,160,32,0.08);
-  outline: none;
-}
-.ref-item.previewing {
-  border-color: var(--amber-glow);
-  background: rgba(232,160,32,0.16);
-  box-shadow: 0 0 10px rgba(232,160,32,0.18);
-}
+.ref-item { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.12s ease; }
+.ref-item:hover, .ref-item:focus-visible { border-color: var(--amber); background: rgba(232,160,32,0.08); outline: none; }
+.ref-item.previewing { border-color: var(--amber-glow); background: rgba(232,160,32,0.16); box-shadow: 0 0 10px rgba(232,160,32,0.18); }
 .ref-char { font-family: var(--display); font-size: 0.65rem; color: var(--amber); font-weight: 700; }
 .ref-code { font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.06em; }
 .timing-row { font-size: 0.72rem; color: var(--text-dim); line-height: 1.9; letter-spacing: 0.04em; }
 
 .mode-row { display:flex; gap:0.5rem; margin-bottom:0.75rem; }
-.mode-btn {
-  flex:1; padding:0.6rem 0.7rem; font-family:var(--display); font-size:0.62rem; font-weight:700;
-  letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim);
-  background:var(--surface2); border:1px solid var(--border); border-radius:4px; cursor:pointer;
-}
+.mode-btn { flex:1; padding:0.6rem 0.7rem; font-family:var(--display); font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); background:var(--surface2); border:1px solid var(--border); border-radius:4px; cursor:pointer; }
 .mode-btn.active { color:var(--amber); border-color:var(--amber); background:var(--amber-dim); }
-.live-scan-box {
-  background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:0.75rem 1rem;
-  min-height:3.2rem;
-}
-.live-scan-morse {
-  font-size:0.9rem; color:var(--text); letter-spacing:0.12em; line-height:1.6; min-height:1.6rem;
-}
+.live-scan-box { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:0.75rem 1rem; min-height:3.2rem; }
+.live-scan-morse { font-size:0.9rem; color:var(--text); letter-spacing:0.12em; line-height:1.6; min-height:1.6rem; }
 .live-scan-morse.empty { color:var(--text-dim); }
-.live-scan-indicator {
-  margin-top:0.55rem; display:flex; align-items:center; gap:0.5rem; font-size:0.62rem; letter-spacing:0.12em;
-  text-transform:uppercase; color:var(--text-dim);
-}
-.live-scan-indicator .pulse {
-  width:8px; height:8px; border-radius:50%; background:var(--surface); border:1px solid var(--border); transition:all 0.05s;
-}
+.live-scan-indicator { margin-top:0.55rem; display:flex; align-items:center; gap:0.5rem; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); }
+.live-scan-indicator .pulse { width:8px; height:8px; border-radius:50%; background:var(--surface); border:1px solid var(--border); transition:all 0.05s; }
 .live-scan-indicator .pulse.on { background:var(--green); border-color:var(--green); box-shadow:0 0 8px rgba(57,255,122,0.55); }
-.live-scan-quality {
-  margin-top: 0.65rem;
-  display: grid;
-  gap: 0.35rem;
-}
-.live-scan-quality-text {
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.live-scan-quality-meter {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.live-scan-quality-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #7a2828 0%, #b86c1e 45%, #39ff7a 100%);
-  transition: width 0.16s ease;
-}
+.live-scan-quality { margin-top: 0.65rem; display: grid; gap: 0.35rem; }
+.live-scan-quality-text { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+.live-scan-quality-meter { height: 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.live-scan-quality-fill { height: 100%; width: 0%; border-radius: inherit; background: linear-gradient(90deg, #7a2828 0%, #b86c1e 45%, #39ff7a 100%); transition: width 0.1s ease; }
 .decode-output.live { min-height:1.9rem; }
 .scanner-hint { font-size:0.62rem; color:var(--text-dim); line-height:1.7; letter-spacing:0.03em; margin-top:0.55rem; }
 .scanner-hidden-media { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
+
+.freq-detect-row { display:flex; align-items:center; gap:0.75rem; margin-top:0.6rem; flex-wrap:wrap; }
+.freq-badge { font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:0.2rem 0.5rem; }
+.freq-badge.locked { color:var(--amber); border-color:var(--amber-dim); }
+.thresh-row { font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; margin-top:0.4rem; }
 
 @media (max-width: 600px) {
   :root { --app-width: 100%; }
@@ -412,14 +266,12 @@ button:active { transform: scale(0.97); }
     <div class="section-label">Message</div>
     <textarea id="text-input" class="message-input" placeholder="Type your message..." rows="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
   </section>
-
   <section>
     <div class="section-label">Morse Code</div>
     <div id="morse-display">—</div>
     <div class="morse-strip" id="morse-strip"></div>
     <div class="warning" id="unsupported-warning">Some characters are not supported in Morse and will be skipped.</div>
   </section>
-
   <section>
     <div class="stat-grid">
       <div class="stat"><span class="stat-val" id="stat-chars">0</span><span class="stat-label">Chars</span></div>
@@ -427,7 +279,6 @@ button:active { transform: scale(0.97); }
       <div class="stat"><span class="stat-val" id="stat-duration">0s</span><span class="stat-label">Duration</span></div>
     </div>
   </section>
-
   <section>
     <div class="section-label">Options</div>
     <div class="options-box" id="tx-options-box">
@@ -436,7 +287,7 @@ button:active { transform: scale(0.97); }
         <span class="summary" id="tx-options-summary">15 WPM · 700Hz</span>
         <span class="chev">⌄</span>
       </button>
-      <div class="options-panel" id="tx-options-panel">
+      <div class="options-panel">
         <div style="padding-top:0.9rem">
           <div class="controls" style="margin-bottom:1rem">
             <div class="control-group">
@@ -454,7 +305,6 @@ button:active { transform: scale(0.97); }
               </div>
             </div>
           </div>
-
           <div class="toggle-group">
             <div class="toggle-row">
               <div class="toggle-info">
@@ -463,7 +313,6 @@ button:active { transform: scale(0.97); }
               </div>
               <label class="toggle"><input type="checkbox" id="tog-audio" checked><div class="toggle-track"></div></label>
             </div>
-
             <div class="toggle-row">
               <div class="toggle-info">
                 <div class="flash-row">
@@ -474,7 +323,6 @@ button:active { transform: scale(0.97); }
               </div>
               <label class="toggle"><input type="checkbox" id="tog-flash"><div class="toggle-track"></div></label>
             </div>
-
             <div class="toggle-row">
               <div class="toggle-info">
                 <div class="toggle-name">Screen Flash</div>
@@ -483,13 +331,11 @@ button:active { transform: scale(0.97); }
               <label class="toggle"><input type="checkbox" id="tog-screen"><div class="toggle-track"></div></label>
             </div>
           </div>
-
-          <div class="warning" id="flash-warning">Camera flash requires HTTPS and a supported browser with torch API access. Enabling it will request camera permission when you transmit.</div>
+          <div class="warning" id="flash-warning">Camera flash requires HTTPS and a supported browser with torch API access.</div>
         </div>
       </div>
     </div>
   </section>
-
   <section>
     <div class="btn-row">
       <button class="btn-transmit" id="btn-transmit">▶ Transmit</button>
@@ -508,7 +354,6 @@ button:active { transform: scale(0.97); }
     </div>
     <div class="morse-live" id="morse-live"><span class="cursor"></span></div>
   </section>
-
   <section>
     <div class="section-label">Dot / Dash Input</div>
     <div class="tap-pad">
@@ -517,16 +362,39 @@ button:active { transform: scale(0.97); }
       <button class="tap-btn backspace" id="tap-back">⌫ DEL</button>
       <button class="tap-btn clr-decode" id="tap-clr">CLEAR</button>
     </div>
-    <div class="tap-hint">
-      Enter only dots and dashes. Letter and word gaps are added automatically from short and long pauses between taps.
-    </div>
+    <div class="tap-hint">Enter only dots and dashes. Letter and word gaps are added automatically from short and long pauses between taps.</div>
   </section>
-
   <section>
     <div class="section-label">Live Decode Scanner</div>
     <div class="mode-row">
       <button class="mode-btn active" id="scan-mode-audio">Audio (Mic)</button>
       <button class="mode-btn" id="scan-mode-light">Light (Camera)</button>
+    </div>
+
+    <div id="audio-scanner-options" style="margin-bottom:0.75rem">
+      <div class="controls">
+        <div class="control-group">
+          <div class="control-label">Listen Freq (Hz)</div>
+          <div class="slider-row">
+            <input type="range" id="scan-freq" min="300" max="1200" value="700" step="25">
+            <span class="slider-val" id="scan-freq-val">700Hz</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-label">Sensitivity</div>
+          <div class="slider-row">
+            <input type="range" id="scan-sens" min="1" max="10" value="5" step="1">
+            <span class="slider-val" id="scan-sens-val">5</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-top:0.6rem">
+        <div class="toggle-info">
+          <div class="toggle-name">Auto-detect frequency</div>
+          <div class="toggle-desc">Find strongest tone automatically</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="tog-auto-freq" checked><div class="toggle-track"></div></label>
+      </div>
     </div>
 
     <div class="btn-row" style="margin-bottom:0.75rem">
@@ -540,7 +408,11 @@ button:active { transform: scale(0.97); }
         <div class="pulse" id="live-scan-pulse"></div>
         <span id="live-scan-state">Idle</span>
       </div>
-      <div class="live-scan-quality">
+      <div class="freq-detect-row">
+        <span class="freq-badge" id="freq-badge">No signal</span>
+        <span class="thresh-row" id="thresh-info"></span>
+      </div>
+      <div class="live-scan-quality" style="margin-top:0.55rem">
         <div class="live-scan-quality-text" id="live-scan-quality-text">Signal quality: idle</div>
         <div class="live-scan-quality-meter">
           <div class="live-scan-quality-fill" id="live-scan-quality-fill"></div>
@@ -553,13 +425,12 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div class="scanner-hint">
-      Audio mode auto-locks to the strongest stable tone, then decodes with stricter timing commits. For best speaker-to-mic results, keep volume around 40–80% and hold the receiving mic close to the sending speaker.
+      Audio mode uses a Goertzel tone detector — very fast, no smearing. For best results keep the sending device at moderate volume near the mic. Auto-detect finds the tone automatically; or set frequency manually to match the transmitter.
     </div>
 
     <video id="live-scan-video" class="scanner-hidden-media" playsinline muted></video>
     <canvas id="live-scan-canvas" class="scanner-hidden-media" width="64" height="48"></canvas>
   </section>
-
   <section>
     <div class="btn-row">
       <button id="btn-copy-decoded" style="flex:1">Copy Text</button>
@@ -573,7 +444,6 @@ button:active { transform: scale(0.97); }
     <div class="section-label">Morse Code Reference</div>
     <div class="ref-grid" id="ref-grid"></div>
   </section>
-
   <section>
     <div class="section-label">Timing Guide</div>
     <div class="timing-row">
@@ -585,7 +455,6 @@ button:active { transform: scale(0.97); }
       <div style="margin-top:0.4rem;font-size:0.65rem;">At 15 WPM · 1 unit ≈ 80ms</div>
     </div>
   </section>
-
   <section>
     <div class="section-label">Common Prosigns</div>
     <div class="timing-row">
@@ -618,154 +487,314 @@ const MORSE = {
   ':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.','_':'..--.-','$':'...-..-',' ':' '
 };
 const MORSE_REV = {};
-Object.entries(MORSE).forEach(([k, v]) => { if (k !== ' ') MORSE_REV[v] = k; });
+Object.entries(MORSE).forEach(([k,v]) => { if (k !== ' ') MORSE_REV[v] = k; });
 
-const textInput = document.getElementById('text-input');
-const morseDisplay = document.getElementById('morse-display');
-const morseStrip = document.getElementById('morse-strip');
-const unsupportedWarning = document.getElementById('unsupported-warning');
-const btnTransmit = document.getElementById('btn-transmit');
-const btnStop = document.getElementById('btn-stop');
-const btnSaveAudio = document.getElementById('btn-save-audio');
-const btnClear = document.getElementById('btn-clear');
-const wpmSlider = document.getElementById('wpm');
-const wpmVal = document.getElementById('wpm-val');
-const freqSlider = document.getElementById('freq');
-const freqVal = document.getElementById('freq-val');
-const togAudio = document.getElementById('tog-audio');
-const togFlash = document.getElementById('tog-flash');
-const togScreen = document.getElementById('tog-screen');
-const flashWarning = document.getElementById('flash-warning');
-const flashIndicator = document.getElementById('flash-indicator');
-const screenOverlay = document.getElementById('screen-overlay');
-const statusDot = document.getElementById('status-dot');
-const statusText = document.getElementById('status-text');
-const logo = document.getElementById('logo');
-const statChars = document.getElementById('stat-chars');
-const statSymbols = document.getElementById('stat-symbols');
-const statDuration = document.getElementById('stat-duration');
+const $ = id => document.getElementById(id);
+const textInput = $('text-input');
+const morseDisplay = $('morse-display');
+const morseStrip = $('morse-strip');
+const unsupportedWarning = $('unsupported-warning');
+const btnTransmit = $('btn-transmit');
+const btnStop = $('btn-stop');
+const btnSaveAudio = $('btn-save-audio');
+const btnClear = $('btn-clear');
+const wpmSlider = $('wpm');
+const wpmVal = $('wpm-val');
+const freqSlider = $('freq');
+const freqVal = $('freq-val');
+const togAudio = $('tog-audio');
+const togFlash = $('tog-flash');
+const togScreen = $('tog-screen');
+const flashWarning = $('flash-warning');
+const flashIndicator = $('flash-indicator');
+const screenOverlay = $('screen-overlay');
+const statusDot = $('status-dot');
+const statusText = $('status-text');
+const logo = $('logo');
+const statChars = $('stat-chars');
+const statSymbols = $('stat-symbols');
+const statDuration = $('stat-duration');
+const txOptionsBox = $('tx-options-box');
+const txOptionsToggle = $('tx-options-toggle');
+const txOptionsSummary = $('tx-options-summary');
+const decodeOutput = $('decode-output');
+const morseLive = $('morse-live');
+const scanModeAudioBtn = $('scan-mode-audio');
+const scanModeLightBtn = $('scan-mode-light');
+const btnScanStart = $('btn-scan-start');
+const btnScanStop = $('btn-scan-stop');
+const liveScanMorse = $('live-scan-morse');
+const liveScanOutput = $('live-scan-output');
+const liveScanPulse = $('live-scan-pulse');
+const liveScanState = $('live-scan-state');
+const liveScanQualityText = $('live-scan-quality-text');
+const liveScanQualityFill = $('live-scan-quality-fill');
+const liveScanVideo = $('live-scan-video');
+const liveScanCanvas = $('live-scan-canvas');
+const refGrid = $('ref-grid');
+const scanFreqSlider = $('scan-freq');
+const scanFreqVal = $('scan-freq-val');
+const scanSensSlider = $('scan-sens');
+const scanSensVal = $('scan-sens-val');
+const togAutoFreq = $('tog-auto-freq');
+const freqBadge = $('freq-badge');
+const threshInfo = $('thresh-info');
+const audioScannerOptions = $('audio-scanner-options');
 
-const txOptionsBox = document.getElementById('tx-options-box');
-const txOptionsToggle = document.getElementById('tx-options-toggle');
-const txOptionsSummary = document.getElementById('tx-options-summary');
-
-const decodeOutput = document.getElementById('decode-output');
-const morseLive = document.getElementById('morse-live');
-
-const scanModeAudioBtn = document.getElementById('scan-mode-audio');
-const scanModeLightBtn = document.getElementById('scan-mode-light');
-const btnScanStart = document.getElementById('btn-scan-start');
-const btnScanStop = document.getElementById('btn-scan-stop');
-const liveScanMorse = document.getElementById('live-scan-morse');
-const liveScanOutput = document.getElementById('live-scan-output');
-const liveScanPulse = document.getElementById('live-scan-pulse');
-const liveScanState = document.getElementById('live-scan-state');
-const liveScanQualityText = document.getElementById('live-scan-quality-text');
-const liveScanQualityFill = document.getElementById('live-scan-quality-fill');
-const liveScanVideo = document.getElementById('live-scan-video');
-const liveScanCanvas = document.getElementById('live-scan-canvas');
-const refGrid = document.getElementById('ref-grid');
-
-let audioCtx = null;
-let currentOsc = null;
-let currentGain = null;
-let transmitting = false;
-let stopRequested = false;
-let torchTrack = null;
-let torchStream = null;
-let torchOn = false;
-let symbolEls = [];
-let lastEncoded = { tokens: [], morse: '', unsupported: [] };
-let tapMorse = '';
-let tapLastInputAt = 0;
-let tapLetterGapTimer = null;
-let tapWordGapTimer = null;
+let audioCtx = null, currentOsc = null, currentGain = null;
+let transmitting = false, stopRequested = false;
+let torchTrack = null, torchStream = null, torchOn = false;
+let symbolEls = [], lastEncoded = { tokens: [], morse: '', unsupported: [] };
+let tapMorse = '', tapLastInputAt = 0, tapLetterGapTimer = null, tapWordGapTimer = null;
 let refPreviewToken = 0;
 
-let messagePointerStartY = 0;
-let messagePointerStartX = 0;
-let messagePointerMoved = false;
-let suppressNextFocus = false;
+// ─────────────────────────────────────────────────
+//  GOERTZEL TONE DETECTOR
+//
+//  Runs on small frames (FRAME_MS). For each frame:
+//  1. Compute Goertzel power at target freq (and scan band if auto-detect)
+//  2. Compare to adaptive noise floor → SNR
+//  3. Hard threshold → binary on/off state
+//  4. Debounce short glitches, then emit transitions to timing logic
+// ─────────────────────────────────────────────────
 
-const liveScanner = {
-  mode: 'audio',
+const G = {
   running: false,
-  rafId: null,
-  stream: null,
+  mode: 'audio',
   audioCtx: null,
-  analyser: null,
-  source: null,
-  freqData: null,
-  timeDataFloat: null,
+  processor: null,
+  stream: null,
+  sampleRate: 0,
 
-  signalQuality: 0,
-  signalQualityLabel: 'Idle',
+  // Goertzel state
+  FRAME_MS: 12,
+  frameSize: 0,
+  frameBuffer: null,
+  frameFill: 0,
 
-  // raw rendered morse + final decoded text
-  raw: '',
-  decodedText: '',
-  currentCode: '',
-  pendingWordGap: false,
+  // Frequency detection
+  targetFreq: 700,
+  autoDetect: true,
+  detectedFreq: 0,
 
-  // timing
+  // Scan band for auto-detect (300–1200 Hz, 25 Hz steps)
+  scanFreqs: [],
+
+  // Adaptive noise floor
+  noiseFloor: 0,
+  noiseAlpha: 0.005,
+  noiseFastAlpha: 0.15,
+
+  // Signal state machine
+  sensitivity: 5,
+  SNR_ON: 0,
+  SNR_OFF: 0,
+  rawOn: false,
+  debounceOn: false,
+  debounceTimer: null,
+  DEBOUNCE_ON_MS: 8,
+  DEBOUNCE_OFF_MS: 14,
+
+  // Timing decoder
+  signalOn: false,
+  lastEdgeAt: 0,
   dotEstimate: 80,
-  lastState: false,
-  lastChange: 0,
-  hasSignal: false,
   shortOnSamples: [],
   shortOffSamples: [],
 
-  // audio detection
-  audioCandidates: [],
-  audioLockedFreq: 0,
-  audioLockedScore: 0,
-  audioStateLatch: false,
-  audioFloor: 0.00001,
-  audioRmsFloor: 0.0025,
-  audioRmsSmooth: 0,
-  audioOnScore: 0,
-  audioOffScore: 0,
-  audioLastStrongAt: 0,
+  // Output
+  raw: '',
+  decodedText: '',
+  currentCode: '',
 
-  // light detection
-  lightBaseline: 0,
-  lightSmoothed: 0,
-  lightContrastBaseline: 0,
-  lightContrastSmoothed: 0,
-  lightStateLatch: false,
+  // Quality
+  currentSNR: 0,
+  lastOnAt: 0,
 
-  calibratingUntil: 0
+  // Light scanner
+  lightStream: null,
+  lightBaseline: -1,
+  lightNoiseEst: 8,
+  lightOn: false,
+  lightDebounceTimer: null,
+  lightSignalOn: false,
+  lightLastEdge: 0,
+
+  flushInterval: null,
 };
 
-function setStatus(msg) { statusText.textContent = msg; }
-function setActive(on) {
-  statusDot.classList.toggle('active', on);
-  logo.classList.toggle('active', on);
-}
-function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-function getDotMs() { return Math.round(1200 / parseInt(wpmSlider.value, 10)); }
-function getTransmitDotMs(useTorch = togFlash.checked) {
-  const dot = getDotMs();
-  return useTorch ? Math.max(dot, 140) : dot;
-}
-function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
-function pushLimited(list, value, limit = 20) {
-  list.push(value);
-  if (list.length > limit) list.splice(0, list.length - limit);
-}
-function median(values) {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+function goertzel(samples, startIdx, count, freq, sampleRate) {
+  const k = Math.round(count * freq / sampleRate);
+  const omega = (2 * Math.PI * k) / count;
+  const coeff = 2 * Math.cos(omega);
+  let s0 = 0, s1 = 0, s2 = 0;
+  for (let i = startIdx; i < startIdx + count; i++) {
+    s0 = samples[i] + coeff * s1 - s2;
+    s2 = s1; s1 = s0;
+  }
+  return s1 * s1 + s2 * s2 - coeff * s1 * s2;
 }
 
-function setLiveRenderedOutput() {
-  liveScanMorse.textContent = liveScanner.raw || 'Waiting for live input...';
-  liveScanMorse.classList.toggle('empty', !liveScanner.raw);
+function computeSensitivityThresholds() {
+  const s = G.sensitivity;
+  G.SNR_ON  = 12 - s * 0.9;
+  G.SNR_OFF = 6  - s * 0.4;
+  if (G.SNR_OFF >= G.SNR_ON) G.SNR_OFF = G.SNR_ON * 0.75;
+}
 
-  if (liveScanner.decodedText) {
-    liveScanOutput.textContent = liveScanner.decodedText;
+function processAudioFrame(samples) {
+  const N = G.frameSize;
+  const sr = G.sampleRate;
+
+  let targetPower = 0;
+  if (G.autoDetect && G.scanFreqs.length) {
+    let best = 0, bestFreq = G.targetFreq;
+    for (const f of G.scanFreqs) {
+      const p = goertzel(samples, 0, N, f, sr);
+      if (p > best) { best = p; bestFreq = f; }
+    }
+    if (!G.signalOn) {
+      if (G.detectedFreq === 0 || best > goertzel(samples, 0, N, G.detectedFreq, sr) * 1.5) {
+        G.detectedFreq = bestFreq;
+      }
+    }
+    targetPower = goertzel(samples, 0, N, G.detectedFreq || bestFreq, sr);
+  } else {
+    G.detectedFreq = G.targetFreq;
+    targetPower = goertzel(samples, 0, N, G.targetFreq, sr);
+  }
+
+  if (!G.signalOn) {
+    const alpha = (targetPower < G.noiseFloor * 2) ? G.noiseAlpha : G.noiseFastAlpha;
+    if (G.noiseFloor === 0) {
+      G.noiseFloor = Math.max(targetPower, 1e-10);
+    } else {
+      G.noiseFloor = G.noiseFloor * (1 - alpha) + targetPower * alpha;
+    }
+  }
+
+  const snr = G.noiseFloor > 1e-12 ? targetPower / G.noiseFloor : 0;
+  G.currentSNR = snr;
+
+  const isAbove = snr >= G.SNR_ON;
+  const isBelow = snr < G.SNR_OFF;
+
+  const now = performance.now();
+  if (isAbove && !G.rawOn) {
+    G.rawOn = true;
+    if (G.debounceTimer) clearTimeout(G.debounceTimer);
+    G.debounceTimer = setTimeout(() => {
+      if (G.rawOn) confirmEdge(true);
+    }, G.DEBOUNCE_ON_MS);
+  } else if (isBelow && G.rawOn) {
+    G.rawOn = false;
+    if (G.debounceTimer) clearTimeout(G.debounceTimer);
+    G.debounceTimer = setTimeout(() => {
+      if (!G.rawOn) confirmEdge(false);
+    }, G.DEBOUNCE_OFF_MS);
+  }
+
+  const qualityScore = Math.min(1, Math.max(0, (snr - 1) / 15));
+  const qualLabel = G.signalOn
+    ? (qualityScore > 0.6 ? 'Strong tone' : 'Weak tone')
+    : (qualityScore > 0.3 ? 'Signal present' : snr < 1.5 ? 'No signal' : 'Low SNR');
+  updateQuality(qualityScore, qualLabel);
+
+  if (G.detectedFreq > 0) {
+    freqBadge.textContent = `${G.detectedFreq}Hz` + (G.autoDetect ? ' (auto)' : '');
+    freqBadge.className = 'freq-badge' + (G.signalOn ? ' locked' : '');
+  }
+  threshInfo.textContent = `SNR: ${snr.toFixed(1)}x  floor: ${G.SNR_ON.toFixed(1)}x`;
+}
+
+function confirmEdge(on) {
+  if (on === G.signalOn) return;
+  const now = performance.now();
+  const duration = now - G.lastEdgeAt;
+
+  if (G.lastEdgeAt > 0) {
+    if (G.signalOn) {
+      G.lastOnAt = now;
+      processPulse(duration);
+    } else {
+      processGap(duration);
+    }
+  }
+
+  G.signalOn = on;
+  G.lastEdgeAt = now;
+
+  liveScanPulse.classList.toggle('on', on);
+  liveScanState.textContent = on ? 'Tone ON' : 'Tone off';
+  setActive(on);
+}
+
+function processPulse(ms) {
+  const minPulse = Math.max(12, G.dotEstimate * 0.18);
+  if (ms < minPulse) return;
+
+  const dot = Math.max(20, G.dotEstimate);
+  const symbol = ms < dot * 2.0 ? '.' : '-';
+
+  if (symbol === '.') {
+    G.shortOnSamples.push(ms);
+    if (G.shortOnSamples.length > 16) G.shortOnSamples.shift();
+    updateDotEstimate();
+  }
+
+  G.currentCode += symbol;
+  G.raw += symbol;
+  liveScanMorse.textContent = G.raw;
+  liveScanMorse.classList.remove('empty');
+}
+
+function processGap(ms) {
+  const minGap = Math.max(10, G.dotEstimate * 0.15);
+  if (ms < minGap) return;
+
+  const dot = Math.max(20, G.dotEstimate);
+
+  if (ms < dot * 1.8) {
+    G.shortOffSamples.push(ms);
+    if (G.shortOffSamples.length > 16) G.shortOffSamples.shift();
+    updateDotEstimate();
+    return;
+  }
+
+  const isWord = ms >= dot * 5.5;
+
+  if (G.currentCode) {
+    if (!G.raw.endsWith(' ') && !G.raw.endsWith('/')) G.raw += ' ';
+    const ch = MORSE_REV[G.currentCode] || '?';
+    G.decodedText += ch;
+    G.currentCode = '';
+    setLiveScanOutput();
+  }
+
+  if (isWord && G.decodedText && !G.decodedText.endsWith(' ')) {
+    G.raw += '/ ';
+    G.decodedText += ' ';
+    setLiveScanOutput();
+  }
+}
+
+function updateDotEstimate() {
+  const allShort = [...G.shortOnSamples, ...G.shortOffSamples];
+  if (allShort.length < 2) return;
+  allShort.sort((a,b) => a-b);
+  const idx = Math.max(0, Math.floor(allShort.length * 0.20));
+  const est = allShort[idx];
+  if (est > 15 && est < 600) {
+    G.dotEstimate = G.dotEstimate * 0.80 + est * 0.20;
+  }
+}
+
+function setLiveScanOutput() {
+  liveScanMorse.textContent = G.raw || 'Waiting for live input...';
+  liveScanMorse.classList.toggle('empty', !G.raw);
+
+  if (G.decodedText.trim()) {
+    liveScanOutput.textContent = G.decodedText;
     liveScanOutput.classList.remove('empty');
   } else {
     liveScanOutput.textContent = 'Decoded live text will appear here...';
@@ -773,95 +802,319 @@ function setLiveRenderedOutput() {
   }
 }
 
-function updateLiveScanQuality(score, label) {
-  liveScanner.signalQuality = clamp(score, 0, 1);
-  liveScanner.signalQualityLabel = label;
-  liveScanQualityFill.style.width = `${Math.round(liveScanner.signalQuality * 100)}%`;
-  liveScanQualityText.textContent = `Signal quality: ${label}`;
+function checkSilenceFlush() {
+  if (!G.signalOn && G.currentCode && G.lastEdgeAt > 0) {
+    const silent = performance.now() - G.lastEdgeAt;
+    const dot = Math.max(20, G.dotEstimate);
+    if (silent > dot * 3.5) {
+      if (!G.raw.endsWith(' ') && !G.raw.endsWith('/')) G.raw += ' ';
+      const ch = MORSE_REV[G.currentCode] || '?';
+      G.decodedText += ch;
+      G.currentCode = '';
+      setLiveScanOutput();
+    }
+    if (silent > dot * 7 && G.decodedText && !G.decodedText.endsWith(' ')) {
+      G.raw += '/ ';
+      G.decodedText += ' ';
+      setLiveScanOutput();
+    }
+  }
 }
+
+function updateQuality(score, label) {
+  liveScanQualityFill.style.width = `${Math.round(score * 100)}%`;
+  liveScanQualityText.textContent = `Signal: ${label}`;
+}
+
+async function startAudioScanner() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setStatus('Microphone not supported'); return false;
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 }
+  });
+
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtor();
+  const sampleRate = ctx.sampleRate;
+
+  G.sampleRate = sampleRate;
+  G.stream = stream;
+  G.audioCtx = ctx;
+  G.frameSize = Math.max(64, Math.round(sampleRate * G.FRAME_MS / 1000));
+  G.frameBuffer = new Float32Array(G.frameSize);
+  G.frameFill = 0;
+  G.noiseFloor = 0;
+
+  G.scanFreqs = [];
+  for (let f = 300; f <= 1200; f += 25) G.scanFreqs.push(f);
+
+  const bufSize = 256;
+  const source = ctx.createMediaStreamSource(stream);
+  const processor = ctx.createScriptProcessor(bufSize, 1, 1);
+  source.connect(processor);
+  processor.connect(ctx.destination);
+
+  G.processor = processor;
+  G.audioSource = source;
+
+  processor.onaudioprocess = (e) => {
+    if (!G.running) return;
+    const input = e.inputBuffer.getChannelData(0);
+    for (let i = 0; i < input.length; i++) {
+      G.frameBuffer[G.frameFill++] = input[i];
+      if (G.frameFill >= G.frameSize) {
+        processAudioFrame(G.frameBuffer);
+        G.frameFill = 0;
+      }
+    }
+  };
+
+  G.flushInterval = setInterval(checkSilenceFlush, 50);
+  return true;
+}
+
+async function startLightScanner() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setStatus('Camera not supported'); return false;
+  }
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 320 }, height: { ideal: 240 } },
+    audio: false
+  });
+  G.lightStream = stream;
+  liveScanVideo.srcObject = stream;
+  await liveScanVideo.play();
+
+  G.lightBaseline = -1;
+  G.lightNoiseEst = 8;
+  G.lightOn = false;
+  G.lightSignalOn = false;
+  G.lightLastEdge = performance.now();
+
+  const canvas = liveScanCanvas;
+  const ctx2d = canvas.getContext('2d', { willReadFrequently: true });
+
+  const BASELINE_WIN = 60;
+  let baselineWindow = [];
+
+  const loop = () => {
+    if (!G.running || G.mode !== 'light') return;
+    if (liveScanVideo.readyState < 2) { requestAnimationFrame(loop); return; }
+
+    ctx2d.drawImage(liveScanVideo, 0, 0, canvas.width, canvas.height);
+    const px = ctx2d.getImageData(
+      Math.floor(canvas.width * 0.3), Math.floor(canvas.height * 0.3),
+      Math.floor(canvas.width * 0.4), Math.floor(canvas.height * 0.4)
+    ).data;
+
+    let sum = 0, n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      sum += px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114;
+      n++;
+    }
+    const brightness = n > 0 ? sum / n : 0;
+
+    baselineWindow.push(brightness);
+    if (baselineWindow.length > BASELINE_WIN) baselineWindow.shift();
+    const baseline = Math.min(...baselineWindow);
+
+    if (!G.lightSignalOn) {
+      const recent = baselineWindow.slice(-8);
+      const avg = recent.reduce((a,b)=>a+b,0)/recent.length;
+      const variance = recent.reduce((a,b)=>a+(b-avg)*(b-avg),0)/recent.length;
+      G.lightNoiseEst = G.lightNoiseEst * 0.92 + Math.sqrt(variance) * 0.08 + 0.5;
+    }
+
+    const threshold = Math.max(12, baseline + G.lightNoiseEst * 3.5);
+    const isAbove = brightness > threshold;
+    const qualScore = Math.min(1, Math.max(0, (brightness - baseline) / Math.max(threshold - baseline, 1)));
+
+    updateQuality(qualScore * (G.lightSignalOn ? 1 : 0.7),
+      G.lightSignalOn ? 'Light detected' : (qualScore > 0.4 ? 'Weak flash' : 'Watching'));
+    freqBadge.textContent = `Brightness: ${Math.round(brightness)}`;
+    freqBadge.className = 'freq-badge' + (G.lightSignalOn ? ' locked' : '');
+
+    if (isAbove !== G.lightOn) {
+      G.lightOn = isAbove;
+      clearTimeout(G.lightDebounceTimer);
+      const delay = isAbove ? 10 : 18;
+      G.lightDebounceTimer = setTimeout(() => {
+        if (G.lightOn === isAbove) confirmLightEdge(isAbove);
+      }, delay);
+    }
+
+    requestAnimationFrame(loop);
+  };
+  loop();
+
+  G.flushInterval = setInterval(checkSilenceFlush, 50);
+  return true;
+}
+
+function confirmLightEdge(on) {
+  if (on === G.lightSignalOn) return;
+  const now = performance.now();
+  const duration = now - G.lightLastEdge;
+
+  if (G.lightLastEdge > 0 && duration > 5) {
+    if (G.lightSignalOn) processPulse(duration);
+    else processGap(duration);
+  }
+
+  G.lightSignalOn = on;
+  G.lightLastEdge = now;
+  liveScanPulse.classList.toggle('on', on);
+  liveScanState.textContent = on ? 'Flash ON' : 'Flash off';
+  setActive(on);
+}
+
+function resetScannerState() {
+  G.raw = '';
+  G.decodedText = '';
+  G.currentCode = '';
+  G.dotEstimate = Math.max(40, Math.round(1200 / parseInt(wpmSlider.value, 10)));
+  G.shortOnSamples = [];
+  G.shortOffSamples = [];
+  G.signalOn = false;
+  G.lightSignalOn = false;
+  G.lastEdgeAt = 0;
+  G.lightLastEdge = 0;
+  G.noiseFloor = 0;
+  G.rawOn = false;
+  G.currentSNR = 0;
+
+  computeSensitivityThresholds();
+  G.targetFreq = parseInt(scanFreqSlider.value, 10);
+  G.autoDetect = togAutoFreq.checked;
+  G.detectedFreq = G.autoDetect ? 0 : G.targetFreq;
+
+  liveScanPulse.classList.remove('on');
+  liveScanState.textContent = 'Idle';
+  updateQuality(0, 'Idle');
+  freqBadge.textContent = 'No signal';
+  freqBadge.className = 'freq-badge';
+  threshInfo.textContent = '';
+  setLiveScanOutput();
+}
+
+async function startLiveScanner() {
+  if (G.running) return;
+  resetScannerState();
+  G.running = true;
+  btnScanStart.style.display = 'none';
+  btnScanStop.style.display = '';
+  liveScanState.textContent = G.mode === 'audio' ? 'Starting mic...' : 'Starting camera...';
+  setStatus(G.mode === 'audio' ? 'Starting audio scanner...' : 'Starting light scanner...');
+
+  try {
+    const ok = G.mode === 'audio' ? await startAudioScanner() : await startLightScanner();
+    if (!ok) throw new Error('Failed to start');
+    setStatus(G.mode === 'audio' ? 'Listening for Morse tone...' : 'Watching for Morse flashes...');
+    liveScanState.textContent = G.mode === 'audio' ? 'Listening' : 'Watching';
+  } catch(e) {
+    G.running = false;
+    cleanupScanner();
+    btnScanStart.style.display = '';
+    btnScanStop.style.display = 'none';
+    const denied = /denied|permission/i.test(String(e));
+    liveScanState.textContent = denied ? 'Permission denied' : 'Unavailable';
+    updateQuality(0, denied ? 'Permission denied' : 'Unavailable');
+    setStatus(denied ? 'Permission denied' : G.mode === 'audio' ? 'Microphone unavailable' : 'Camera unavailable');
+  }
+}
+
+function cleanupScanner() {
+  clearInterval(G.flushInterval);
+  clearTimeout(G.debounceTimer);
+  clearTimeout(G.lightDebounceTimer);
+  if (G.processor) { try { G.processor.disconnect(); } catch {} G.processor = null; }
+  if (G.audioSource) { try { G.audioSource.disconnect(); } catch {} G.audioSource = null; }
+  if (G.audioCtx) { try { G.audioCtx.close(); } catch {} G.audioCtx = null; }
+  if (G.stream) { G.stream.getTracks().forEach(t => { try { t.stop(); } catch {} }); G.stream = null; }
+  if (G.lightStream) { G.lightStream.getTracks().forEach(t => { try { t.stop(); } catch {} }); G.lightStream = null; }
+  liveScanVideo.srcObject = null;
+}
+
+function stopLiveScanner() {
+  if (!G.running) return;
+  G.running = false;
+
+  if (G.currentCode) {
+    if (!G.raw.endsWith(' ') && !G.raw.endsWith('/')) G.raw += ' ';
+    G.decodedText += (MORSE_REV[G.currentCode] || '?');
+    G.currentCode = '';
+    setLiveScanOutput();
+  }
+
+  cleanupScanner();
+  btnScanStart.style.display = '';
+  btnScanStop.style.display = 'none';
+  liveScanPulse.classList.remove('on');
+  liveScanState.textContent = 'Stopped';
+  updateQuality(0, 'Stopped');
+  setActive(false);
+  setStatus('Scanner stopped');
+}
+
+function setScanMode(mode) {
+  if (G.running) stopLiveScanner();
+  G.mode = mode;
+  scanModeAudioBtn.classList.toggle('active', mode === 'audio');
+  scanModeLightBtn.classList.toggle('active', mode === 'light');
+  btnScanStart.textContent = mode === 'audio' ? 'Start Listening' : 'Start Camera';
+  audioScannerOptions.style.display = mode === 'audio' ? '' : 'none';
+}
+
+function setStatus(msg) { statusText.textContent = msg; }
+function setActive(on) { statusDot.classList.toggle('active', on); logo.classList.toggle('active', on); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function getDotMs() { return Math.round(1200 / parseInt(wpmSlider.value, 10)); }
+function getTransmitDotMs(useTorch = togFlash.checked) { return useTorch ? Math.max(getDotMs(), 140) : getDotMs(); }
 
 function autoResizeMessageInput() {
-  const minHeight = window.innerWidth <= 600 ? 46 : 50;
-  const maxHeight = 180;
-  textInput.style.height = minHeight + 'px';
-  const nextHeight = Math.min(textInput.scrollHeight, maxHeight);
-  textInput.style.height = nextHeight + 'px';
-  textInput.style.overflowY = textInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  const minH = window.innerWidth <= 600 ? 46 : 50;
+  textInput.style.height = minH + 'px';
+  textInput.style.height = Math.min(textInput.scrollHeight, 180) + 'px';
+  textInput.style.overflowY = textInput.scrollHeight > 180 ? 'auto' : 'hidden';
 }
 
-function updateOptionsSummary() {
-  txOptionsSummary.textContent = `${wpmSlider.value} WPM · ${freqSlider.value}Hz`;
-}
-
-function toggleOptions(forceOpen) {
-  const willOpen = typeof forceOpen === 'boolean' ? forceOpen : !txOptionsBox.classList.contains('open');
-  txOptionsBox.classList.toggle('open', willOpen);
-  txOptionsToggle.setAttribute('aria-expanded', String(willOpen));
-}
+function updateOptionsSummary() { txOptionsSummary.textContent = `${wpmSlider.value} WPM · ${freqSlider.value}Hz`; }
 
 function encodeText(text) {
-  const upper = text.toUpperCase();
-  const tokens = [];
-  const unsupported = [];
-  const morseParts = [];
-
-  for (const ch of upper) {
-    if (ch === ' ') {
-      tokens.push({ kind: 'word-gap' });
-      morseParts.push('/');
-      continue;
-    }
-    if (!Object.prototype.hasOwnProperty.call(MORSE, ch)) {
-      unsupported.push(ch);
-      tokens.push({ kind: 'unknown', ch });
-      continue;
-    }
+  const tokens = [], unsupported = [], morseParts = [];
+  for (const ch of text.toUpperCase()) {
+    if (ch === ' ') { tokens.push({ kind: 'word-gap' }); morseParts.push('/'); continue; }
+    if (!MORSE[ch]) { unsupported.push(ch); tokens.push({ kind: 'unknown', ch }); continue; }
     const code = MORSE[ch];
     morseParts.push(code);
     tokens.push({ kind: 'char', ch, code });
   }
-
   return { tokens, morse: morseParts.join(' '), unsupported };
 }
 
 function buildVisualStrip(tokens) {
   morseStrip.innerHTML = '';
   symbolEls = [];
-
-  tokens.forEach((token, tokenIndex) => {
+  tokens.forEach((token, ti) => {
     if (token.kind === 'char') {
       token.visualIndices = [];
       for (let i = 0; i < token.code.length; i++) {
-        const symbol = token.code[i];
         const el = document.createElement('div');
-        el.className = symbol === '.' ? 'symbol dot' : 'symbol dash';
+        el.className = token.code[i] === '.' ? 'symbol dot' : 'symbol dash';
         morseStrip.appendChild(el);
-        symbolEls.push({ el, tokenIndex, type: symbol });
+        symbolEls.push({ el, type: token.code[i] });
         token.visualIndices.push(symbolEls.length - 1);
-
-        if (i < token.code.length - 1) {
-          const gap = document.createElement('div');
-          gap.className = 'symbol space';
-          morseStrip.appendChild(gap);
-        }
+        if (i < token.code.length - 1) { const g = document.createElement('div'); g.className = 'symbol space'; morseStrip.appendChild(g); }
       }
     } else if (token.kind === 'word-gap') {
-      const el = document.createElement('div');
-      el.className = 'symbol word-space';
-      morseStrip.appendChild(el);
-    } else if (token.kind === 'unknown') {
-      const el = document.createElement('div');
-      el.className = 'symbol unknown';
-      morseStrip.appendChild(el);
+      const el = document.createElement('div'); el.className = 'symbol word-space'; morseStrip.appendChild(el);
+    } else {
+      const el = document.createElement('div'); el.className = 'symbol unknown'; morseStrip.appendChild(el);
     }
-
-    if (tokenIndex < tokens.length - 1) {
-      const next = tokens[tokenIndex + 1];
-      if (token.kind === 'char' && next.kind === 'char') {
-        const gap = document.createElement('div');
-        gap.className = 'symbol space';
-        morseStrip.appendChild(gap);
-      }
+    if (ti < tokens.length - 1 && token.kind === 'char' && tokens[ti+1]?.kind === 'char') {
+      const g = document.createElement('div'); g.className = 'symbol space'; morseStrip.appendChild(g);
     }
   });
 }
@@ -869,49 +1122,32 @@ function buildVisualStrip(tokens) {
 function computeDurationMs(tokens, dotMs) {
   let total = 0;
   for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (token.kind === 'char') {
-      for (let s = 0; s < token.code.length; s++) {
-        total += token.code[s] === '.' ? dotMs : dotMs * 3;
-        if (s < token.code.length - 1) total += dotMs;
-      }
-      const next = tokens[i + 1];
-      if (next && next.kind === 'char') total += dotMs * 3;
-      if (next && next.kind === 'word-gap') total += dotMs * 7;
+    const t = tokens[i];
+    if (t.kind !== 'char') continue;
+    for (let s = 0; s < t.code.length; s++) {
+      total += t.code[s] === '.' ? dotMs : dotMs * 3;
+      if (s < t.code.length - 1) total += dotMs;
     }
+    const next = tokens[i+1];
+    if (next?.kind === 'char') total += dotMs * 3;
+    if (next?.kind === 'word-gap') total += dotMs * 7;
   }
   return total;
 }
 
 function updateDisplay() {
-  const text = textInput.value;
-  lastEncoded = encodeText(text);
+  lastEncoded = encodeText(textInput.value);
   const { tokens, morse, unsupported } = lastEncoded;
-
   morseDisplay.textContent = morse || '—';
   morseDisplay.classList.toggle('has-code', !!morse);
-
   unsupportedWarning.classList.toggle('visible', unsupported.length > 0);
-
   buildVisualStrip(tokens);
-
   const dot = getTransmitDotMs();
   const totalMs = computeDurationMs(tokens, dot);
-  const symbolCount = (morse.match(/[.-]/g) || []).length;
-  const visibleChars = text.replace(/\s/g, '').length;
-
-  statChars.textContent = visibleChars;
-  statSymbols.textContent = symbolCount;
-  statDuration.textContent = totalMs > 0 ? (totalMs / 1000).toFixed(1) + 's' : '0s';
-
-  if (!transmitting) {
-    if (unsupported.length) {
-      const uniq = [...new Set(unsupported)].join(' ');
-      setStatus(`Unsupported character${unsupported.length > 1 ? 's' : ''} skipped: ${uniq}`);
-    } else {
-      setStatus('Ready');
-    }
-  }
+  statChars.textContent = textInput.value.replace(/\s/g,'').length;
+  statSymbols.textContent = (morse.match(/[.-]/g)||[]).length;
+  statDuration.textContent = totalMs > 0 ? (totalMs/1000).toFixed(1)+'s' : '0s';
+  if (!transmitting) setStatus(unsupported.length ? `Unsupported skipped: ${[...new Set(unsupported)].join(' ')}` : 'Ready');
 }
 
 function getAudioCtx() {
@@ -919,108 +1155,54 @@ function getAudioCtx() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
-
 function stopCurrentTone() {
-  try { if (currentGain && audioCtx) currentGain.gain.cancelScheduledValues(audioCtx.currentTime); } catch {}
+  try { if (currentGain) currentGain.gain.cancelScheduledValues(audioCtx.currentTime); } catch {}
   try { if (currentOsc) currentOsc.stop(); } catch {}
-  currentOsc = null;
-  currentGain = null;
+  currentOsc = null; currentGain = null;
 }
-
 async function playTone(ms) {
   const ctx = getAudioCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  currentOsc = osc;
-  currentGain = gain;
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.type = 'sine';
-  osc.frequency.value = parseInt(freqSlider.value, 10);
-
-  const t = ctx.currentTime;
-  const d = ms / 1000;
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  currentOsc = osc; currentGain = gain;
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine'; osc.frequency.value = parseInt(freqSlider.value, 10);
+  const t = ctx.currentTime, d = ms/1000;
   gain.gain.setValueAtTime(0, t);
-  gain.gain.linearRampToValueAtTime(0.6, t + 0.005);
-  gain.gain.setValueAtTime(0.6, t + Math.max(0.005, d - 0.01));
-  gain.gain.linearRampToValueAtTime(0, t + d);
-  osc.start(t);
-  osc.stop(t + d);
-
-  try {
-    await sleep(ms);
-  } finally {
-    currentOsc = null;
-    currentGain = null;
-  }
+  gain.gain.linearRampToValueAtTime(0.6, t+0.005);
+  gain.gain.setValueAtTime(0.6, t+Math.max(0.005, d-0.01));
+  gain.gain.linearRampToValueAtTime(0, t+d);
+  osc.start(t); osc.stop(t+d);
+  try { await sleep(ms); } finally { currentOsc = null; currentGain = null; }
 }
 
 async function acquireTorch() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    setStatus('Camera API unavailable');
-    return false;
-  }
+  if (!navigator.mediaDevices?.getUserMedia) { setStatus('Camera API unavailable'); return false; }
   try {
     torchStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
     const track = torchStream.getVideoTracks()[0];
     const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (!caps.torch) {
-      track.stop();
-      torchStream = null;
-      setStatus('No torch on this device');
-      return false;
-    }
-    torchTrack = track;
-    torchOn = false;
-    flashIndicator.classList.remove('on');
-    return true;
-  } catch {
-    setStatus('Camera permission denied');
-    return false;
-  }
+    if (!caps.torch) { track.stop(); torchStream = null; setStatus('No torch on this device'); return false; }
+    torchTrack = track; torchOn = false; flashIndicator.classList.remove('on'); return true;
+  } catch { setStatus('Camera permission denied'); return false; }
 }
-
 async function setTorch(on) {
-  if (!torchTrack) return;
-  if (torchOn === on) {
-    flashIndicator.classList.toggle('on', on);
-    return;
-  }
-  try {
-    await torchTrack.applyConstraints({ advanced: [{ torch: on }] });
-    torchOn = on;
-    flashIndicator.classList.toggle('on', on);
-  } catch {}
+  if (!torchTrack || torchOn === on) { flashIndicator.classList.toggle('on', on); return; }
+  try { await torchTrack.applyConstraints({ advanced: [{ torch: on }] }); torchOn = on; flashIndicator.classList.toggle('on', on); } catch {}
 }
-
 function releaseTorch() {
-  try {
-    if (torchTrack && torchOn) torchTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
-  } catch {}
-  if (torchStream) {
-    torchStream.getTracks().forEach(track => {
-      try { track.stop(); } catch {}
-    });
-  }
-  torchTrack = null;
-  torchStream = null;
-  torchOn = false;
-  flashIndicator.classList.remove('on');
+  try { if (torchTrack && torchOn) torchTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(()=>{}); } catch {}
+  if (torchStream) torchStream.getTracks().forEach(t => { try { t.stop(); } catch {} });
+  torchTrack = null; torchStream = null; torchOn = false; flashIndicator.classList.remove('on');
 }
 
-async function signalOn(idx) {
+async function signalOnTx(idx) {
   symbolEls.forEach(s => s.el.classList.remove('active'));
-  if (idx !== undefined && symbolEls[idx]) {
-    symbolEls[idx].el.classList.add('active');
-    symbolEls[idx].el.scrollIntoView({ block: 'nearest', inline: 'center' });
-  }
+  if (idx !== undefined && symbolEls[idx]) { symbolEls[idx].el.classList.add('active'); symbolEls[idx].el.scrollIntoView({ block:'nearest', inline:'center' }); }
   if (togFlash.checked) await setTorch(true);
   if (togScreen.checked) screenOverlay.style.opacity = '1';
   setActive(true);
 }
-
-async function signalOff() {
+async function signalOffTx() {
   symbolEls.forEach(s => s.el.classList.remove('active'));
   if (togFlash.checked) await setTorch(false);
   if (togScreen.checked) screenOverlay.style.opacity = '0';
@@ -1030,1208 +1212,237 @@ async function signalOff() {
 function buildTransmitSteps(tokens, dot) {
   const steps = [];
   for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (token.kind !== 'char') continue;
-
-    for (let s = 0; s < token.code.length; s++) {
-      const symbol = token.code[s];
-      steps.push({
-        type: 'on',
-        duration: symbol === '.' ? dot : dot * 3,
-        visualIdx: token.visualIndices?.[s]
-      });
-      if (s < token.code.length - 1) {
-        steps.push({ type: 'off', duration: dot });
-      }
+    const t = tokens[i];
+    if (t.kind !== 'char') continue;
+    for (let s = 0; s < t.code.length; s++) {
+      steps.push({ type:'on', duration: t.code[s]==='.'?dot:dot*3, visualIdx: t.visualIndices?.[s] });
+      if (s < t.code.length-1) steps.push({ type:'off', duration: dot });
     }
-
-    const next = tokens[i + 1];
-    if (next?.kind === 'char') steps.push({ type: 'off', duration: dot * 3 });
-    if (next?.kind === 'word-gap') steps.push({ type: 'off', duration: dot * 7 });
+    const next = tokens[i+1];
+    if (next?.kind==='char') steps.push({ type:'off', duration: dot*3 });
+    if (next?.kind==='word-gap') steps.push({ type:'off', duration: dot*7 });
   }
   return steps;
-}
-
-function sanitizeFilenamePart(text) {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40) || 'message';
-}
-
-function createWavBlobFromSamples(samples, sampleRate) {
-  const bytesPerSample = 2;
-  const blockAlign = bytesPerSample;
-  const byteRate = sampleRate * blockAlign;
-  const dataSize = samples.length * bytesPerSample;
-  const buffer = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(buffer);
-
-  function writeString(offset, value) {
-    for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
-  }
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataSize, true);
-
-  let offset = 44;
-  for (let i = 0; i < samples.length; i++, offset += 2) {
-    const clamped = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
-  }
-
-  return new Blob([buffer], { type: 'audio/wav' });
-}
-
-function renderMorseAudioBuffer(steps, freqHz, sampleRate = 44100) {
-  const totalMs = steps.reduce((sum, step) => sum + step.duration, 0);
-  const totalSamples = Math.max(1, Math.ceil((totalMs / 1000) * sampleRate));
-  const samples = new Float32Array(totalSamples);
-  const amplitude = 0.55;
-  const rampSamples = Math.max(8, Math.floor(sampleRate * 0.005));
-  let cursor = 0;
-
-  for (const step of steps) {
-    const stepSamples = Math.max(1, Math.round((step.duration / 1000) * sampleRate));
-    if (step.type === 'on') {
-      for (let i = 0; i < stepSamples && cursor + i < samples.length; i++) {
-        const rampIn = Math.min(1, i / rampSamples);
-        const rampOut = Math.min(1, (stepSamples - i - 1) / rampSamples);
-        const envelope = Math.min(rampIn, rampOut, 1);
-        const t = (cursor + i) / sampleRate;
-        samples[cursor + i] = Math.sin(2 * Math.PI * freqHz * t) * amplitude * envelope;
-      }
-    }
-    cursor += stepSamples;
-  }
-
-  return samples;
-}
-
-function floatTo16BitPcm(samples) {
-  const pcm = new Int16Array(samples.length);
-  for (let i = 0; i < samples.length; i++) {
-    const clamped = Math.max(-1, Math.min(1, samples[i]));
-    pcm[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
-  }
-  return pcm;
-}
-
-function createMp3BlobFromSamples(samples, sampleRate) {
-  if (!window.lamejs?.Mp3Encoder) return null;
-
-  const encoder = new window.lamejs.Mp3Encoder(1, sampleRate, 128);
-  const pcm = floatTo16BitPcm(samples);
-  const blockSize = 1152;
-  const chunks = [];
-
-  for (let i = 0; i < pcm.length; i += blockSize) {
-    const chunk = pcm.subarray(i, Math.min(i + blockSize, pcm.length));
-    const encoded = encoder.encodeBuffer(chunk);
-    if (encoded.length) chunks.push(new Uint8Array(encoded));
-  }
-
-  const finalChunk = encoder.flush();
-  if (finalChunk.length) chunks.push(new Uint8Array(finalChunk));
-  return new Blob(chunks, { type: 'audio/mpeg' });
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function clearRefPreviewState() {
-  refGrid.querySelectorAll('.ref-item.previewing').forEach(el => el.classList.remove('previewing'));
-  setActive(false);
-}
-
-async function previewRefCode(ch, code, triggerEl) {
-  if (transmitting) {
-    setStatus('Stop transmission before previewing reference audio');
-    return;
-  }
-  if (liveScanner.running) {
-    setStatus('Stop live scanner before previewing reference audio');
-    return;
-  }
-
-  const token = ++refPreviewToken;
-  stopCurrentTone();
-  clearRefPreviewState();
-  if (triggerEl) triggerEl.classList.add('previewing');
-  setStatus(`Previewing ${ch} ${code}`);
-
-  try {
-    const dot = Math.max(getDotMs(), 70);
-    for (let i = 0; i < code.length; i++) {
-      if (token !== refPreviewToken) return;
-
-      const symbol = code[i];
-      const duration = symbol === '.' ? dot : dot * 3;
-      setActive(true);
-      await playTone(duration);
-      setActive(false);
-
-      if (i < code.length - 1) {
-        await sleep(dot);
-      }
-    }
-
-    if (token === refPreviewToken) {
-      setStatus(`Preview ready: ${ch} ${code}`);
-    }
-  } finally {
-    if (token === refPreviewToken) {
-      stopCurrentTone();
-      clearRefPreviewState();
-    }
-  }
-}
-
-function saveMorseAudio() {
-  const text = textInput.value.trim();
-  if (!text) {
-    setStatus('No message to save');
-    return;
-  }
-
-  const { tokens, unsupported } = lastEncoded;
-  const validCharCount = tokens.filter(t => t.kind === 'char').length;
-  if (!validCharCount) {
-    setStatus('Nothing valid to save');
-    return;
-  }
-
-  const dot = getDotMs();
-  const steps = buildTransmitSteps(tokens, dot);
-  const freqHz = parseInt(freqSlider.value, 10);
-  const sampleRate = 44100;
-  const samples = renderMorseAudioBuffer(steps, freqHz, sampleRate);
-  const mp3Blob = createMp3BlobFromSamples(samples, sampleRate);
-  const baseName = `morse-${sanitizeFilenamePart(text)}-${wpmSlider.value}wpm-${freqHz}hz`;
-
-  if (mp3Blob) {
-    downloadBlob(mp3Blob, `${baseName}.mp3`);
-    setStatus(unsupported.length ? 'Saved MP3 with supported characters only' : 'Saved MP3 file');
-    return;
-  }
-
-  const wavBlob = createWavBlobFromSamples(samples, sampleRate);
-  downloadBlob(wavBlob, `${baseName}.wav`);
-  setStatus(unsupported.length ? 'MP3 unavailable, saved WAV with supported characters only' : 'MP3 unavailable, saved WAV file');
 }
 
 async function transmit() {
   if (transmitting) return;
   const text = textInput.value.trim();
-  if (!text) {
-    setStatus('No message to transmit');
-    return;
-  }
-
+  if (!text) { setStatus('No message to transmit'); return; }
   const { tokens, unsupported } = lastEncoded;
-  const validCharCount = tokens.filter(t => t.kind === 'char').length;
-  if (!validCharCount) {
-    setStatus('Nothing valid to transmit');
-    return;
-  }
+  if (!tokens.filter(t=>t.kind==='char').length) { setStatus('Nothing valid to transmit'); return; }
 
-  transmitting = true;
-  stopRequested = false;
-  btnTransmit.style.display = 'none';
-  btnStop.style.display = '';
-  btnTransmit.classList.add('transmitting');
-  textInput.disabled = true;
+  transmitting = true; stopRequested = false;
+  btnTransmit.style.display = 'none'; btnStop.style.display = '';
+  btnTransmit.classList.add('transmitting'); textInput.disabled = true;
 
   try {
     let useTorch = togFlash.checked;
     if (togFlash.checked) {
       setStatus('Requesting camera...');
-      const ok = await acquireTorch();
-      if (!ok) {
-        togFlash.checked = false;
-        useTorch = false;
-        flashWarning.classList.remove('visible');
-        updateDisplay();
-      }
+      if (!await acquireTorch()) { togFlash.checked = false; useTorch = false; }
     }
-
     const dot = getTransmitDotMs(useTorch);
     const steps = buildTransmitSteps(tokens, dot);
-    const slowedForTorch = useTorch && dot > getDotMs();
-    setStatus(
-      unsupported.length
-        ? (slowedForTorch ? 'Transmitting supported characters only... Flash slowed for reliability.' : 'Transmitting supported characters only...')
-        : (slowedForTorch ? 'Transmitting... Flash slowed for reliability.' : 'Transmitting...')
-    );
+    setStatus(unsupported.length ? 'Transmitting (unsupported chars skipped)...' : 'Transmitting...');
 
     for (const step of steps) {
       if (stopRequested) break;
-
       if (step.type === 'on') {
-        await signalOn(step.visualIdx);
+        await signalOnTx(step.visualIdx);
         if (togAudio.checked) await playTone(step.duration);
         else await sleep(step.duration);
       } else {
-        stopCurrentTone();
-        await signalOff();
-        await sleep(step.duration);
+        stopCurrentTone(); await signalOffTx(); await sleep(step.duration);
       }
     }
   } finally {
-    stopCurrentTone();
-    await signalOff();
+    stopCurrentTone(); await signalOffTx();
     if (torchTrack) await sleep(60);
-    releaseTorch();
-    transmitting = false;
-    btnTransmit.style.display = '';
-    btnStop.style.display = 'none';
-    btnTransmit.classList.remove('transmitting');
-    textInput.disabled = false;
-    setStatus(stopRequested ? 'Transmission stopped' : 'Transmission complete');
+    releaseTorch(); transmitting = false;
+    btnTransmit.style.display = ''; btnStop.style.display = 'none';
+    btnTransmit.classList.remove('transmitting'); textInput.disabled = false;
+    setStatus(stopRequested ? 'Stopped' : 'Transmission complete');
   }
+}
+
+function sanitizeFilenamePart(t) { return t.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'message'; }
+
+function renderMorseAudioBuffer(steps, freqHz, sampleRate) {
+  const totalMs = steps.reduce((s,x)=>s+x.duration,0);
+  const samples = new Float32Array(Math.ceil((totalMs/1000)*sampleRate));
+  const amp = 0.55, ramp = Math.floor(sampleRate*0.005);
+  let cursor = 0;
+  for (const step of steps) {
+    const n = Math.round((step.duration/1000)*sampleRate);
+    if (step.type==='on') {
+      for (let i=0;i<n&&cursor+i<samples.length;i++) {
+        const env = Math.min(i/ramp, (n-i-1)/ramp, 1);
+        samples[cursor+i] = Math.sin(2*Math.PI*freqHz*(cursor+i)/sampleRate)*amp*env;
+      }
+    }
+    cursor += n;
+  }
+  return samples;
+}
+
+function createMp3Blob(samples, sampleRate) {
+  if (!window.lamejs?.Mp3Encoder) return null;
+  const enc = new window.lamejs.Mp3Encoder(1, sampleRate, 128);
+  const pcm = new Int16Array(samples.length);
+  for (let i=0;i<samples.length;i++) { const c=Math.max(-1,Math.min(1,samples[i])); pcm[i]=c<0?c*0x8000:c*0x7fff; }
+  const chunks = [];
+  for (let i=0;i<pcm.length;i+=1152) { const e=enc.encodeBuffer(pcm.subarray(i,Math.min(i+1152,pcm.length))); if(e.length) chunks.push(new Uint8Array(e)); }
+  const f=enc.flush(); if(f.length) chunks.push(new Uint8Array(f));
+  return new Blob(chunks,{type:'audio/mpeg'});
+}
+
+function createWavBlob(samples, sampleRate) {
+  const data = samples.length*2, buf = new ArrayBuffer(44+data), v = new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF'); v.setUint32(4,36+data,true); ws(8,'WAVE'); ws(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sampleRate,true); v.setUint32(28,sampleRate*2,true);
+  v.setUint16(32,2,true); v.setUint16(34,16,true); ws(36,'data'); v.setUint32(40,data,true);
+  let o=44; for(let i=0;i<samples.length;i++,o+=2){const c=Math.max(-1,Math.min(1,samples[i]));v.setInt16(o,c<0?c*0x8000:c*0x7fff,true);}
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+function saveMorseAudio() {
+  if (!textInput.value.trim()) { setStatus('No message to save'); return; }
+  const { tokens, unsupported } = lastEncoded;
+  if (!tokens.filter(t=>t.kind==='char').length) { setStatus('Nothing to save'); return; }
+  const dot = getDotMs();
+  const steps = buildTransmitSteps(tokens, dot);
+  const freqHz = parseInt(freqSlider.value, 10);
+  const sampleRate = 44100;
+  const samples = renderMorseAudioBuffer(steps, freqHz, sampleRate);
+  const base = `morse-${sanitizeFilenamePart(textInput.value)}-${wpmSlider.value}wpm-${freqHz}hz`;
+  const mp3 = createMp3Blob(samples, sampleRate);
+  const dl = (blob, name) => { const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),1000); };
+  if (mp3) { dl(mp3, base+'.mp3'); setStatus('Saved MP3'); return; }
+  dl(createWavBlob(samples, sampleRate), base+'.wav');
+  setStatus('Saved WAV');
 }
 
 function normaliseManualMorse(raw) {
-  return raw
-    .replace(/[·•]/g, '.')
-    .replace(/[–—−]/g, '-')
-    .replace(/[^.\-/\s]/g, '')
-    .replace(/\s*\/\s*/g, ' / ')
-    .replace(/\s{3,}/g, ' / ')
-    .replace(/[ ]{2,}/g, ' ')
-    .replace(/(?: \/)\/+/g, ' / ')
-    .replace(/\/(?: \/)+/g, ' / ')
-    .trim();
+  return raw.replace(/[·•]/g,'.').replace(/[–—−]/g,'-').replace(/[^.\-/\s]/g,'')
+    .replace(/\s*\/\s*/g,' / ').replace(/\s{3,}/g,' / ').replace(/[ ]{2,}/g,' ').trim();
 }
-
 function decodeMorse(raw) {
-  const cleaned = normaliseManualMorse(raw);
-  if (!cleaned) return '';
-  return cleaned
-    .split(' / ')
-    .map(word => word.split(' ').map(code => MORSE_REV[code] || '?').join(''))
-    .join(' ');
+  const c = normaliseManualMorse(raw);
+  if (!c) return '';
+  return c.split(' / ').map(w=>w.split(' ').map(code=>MORSE_REV[code]||'?').join('')).join(' ');
 }
-
-function renderLive(raw) {
-  const safe = raw ? raw : '';
-  morseLive.innerHTML = safe + '<span class="cursor"></span>';
-}
-
+function renderLive(raw) { morseLive.innerHTML = (raw||'') + '<span class="cursor"></span>'; }
 function updateDecode(raw) {
   renderLive(raw);
-  const decoded = decodeMorse(raw);
-  if (decoded.trim()) {
-    decodeOutput.textContent = decoded;
-    decodeOutput.classList.remove('empty');
-  } else {
-    decodeOutput.textContent = 'Enter dots and dashes below...';
-    decodeOutput.classList.add('empty');
-  }
+  const d = decodeMorse(raw);
+  if (d.trim()) { decodeOutput.textContent = d; decodeOutput.classList.remove('empty'); }
+  else { decodeOutput.textContent = 'Enter dots and dashes below...'; decodeOutput.classList.add('empty'); }
 }
-
-function clearTapGapTimers() {
-  if (tapLetterGapTimer) clearTimeout(tapLetterGapTimer);
-  if (tapWordGapTimer) clearTimeout(tapWordGapTimer);
-  tapLetterGapTimer = null;
-  tapWordGapTimer = null;
-}
-
-function getTapGapDurations() {
-  const dot = Math.max(getDotMs(), 70);
-  return {
-    letter: Math.max(240, Math.round(dot * 3.15)),
-    word: Math.max(620, Math.round(dot * 7.1))
-  };
-}
-
-function appendTapLetterGap() {
-  if (!tapMorse) return;
-  tapMorse = tapMorse.replace(/\s+$/, '');
-  if (!tapMorse.endsWith(' / ')) tapMorse += ' ';
-}
-
-function appendTapWordGap() {
-  if (!tapMorse) return;
-  tapMorse = tapMorse.replace(/\s*\/?\s*$/, '');
-  tapMorse += ' / ';
-}
-
-function syncTapDecode() {
-  updateDecode(tapMorse);
-}
-
-function scheduleTapGapTimers() {
+function clearTapGapTimers() { clearTimeout(tapLetterGapTimer); clearTimeout(tapWordGapTimer); tapLetterGapTimer=null; tapWordGapTimer=null; }
+function getTapGaps() { const dot=Math.max(getDotMs(),70); return { letter:Math.max(240,dot*3.15), word:Math.max(620,dot*7.1) }; }
+function appendTapSymbol(sym) {
+  const now=performance.now(), g=getTapGaps(), idle=tapLastInputAt?now-tapLastInputAt:0;
   clearTapGapTimers();
-  const gaps = getTapGapDurations();
-  tapLetterGapTimer = setTimeout(() => {
-    appendTapLetterGap();
-    syncTapDecode();
-    tapLetterGapTimer = null;
-  }, gaps.letter);
-  tapWordGapTimer = setTimeout(() => {
-    appendTapWordGap();
-    syncTapDecode();
-    tapWordGapTimer = null;
-  }, gaps.word);
-}
-
-function appendTapSymbol(symbol) {
-  const now = performance.now();
-  const gaps = getTapGapDurations();
-  const idle = tapLastInputAt ? now - tapLastInputAt : 0;
-
-  clearTapGapTimers();
-
   if (tapMorse) {
-    if (idle >= gaps.word) appendTapWordGap();
-    else if (idle >= gaps.letter) appendTapLetterGap();
+    if (idle>=g.word) { tapMorse=tapMorse.replace(/\s*\/?\s*$/,''); tapMorse+=' / '; }
+    else if (idle>=g.letter) { tapMorse=tapMorse.replace(/\s+$/,''); if (!tapMorse.endsWith(' / ')) tapMorse+=' '; }
   }
-
-  tapMorse += symbol;
-  tapLastInputAt = now;
-  syncTapDecode();
-  scheduleTapGapTimers();
+  tapMorse+=sym; tapLastInputAt=now; updateDecode(tapMorse);
+  tapLetterGapTimer=setTimeout(()=>{ tapMorse=tapMorse.replace(/\s+$/,''); if (!tapMorse.endsWith(' / ')) tapMorse+=' '; updateDecode(tapMorse); },g.letter);
+  tapWordGapTimer=setTimeout(()=>{ tapMorse=tapMorse.replace(/\s*\/?\s*$/,''); tapMorse+=' / '; updateDecode(tapMorse); },g.word);
 }
 
-document.getElementById('tap-dot').addEventListener('click', () => appendTapSymbol('.'));
-document.getElementById('tap-dash').addEventListener('click', () => appendTapSymbol('-'));
-
-document.getElementById('tap-back').addEventListener('click', () => {
+$('tap-dot').addEventListener('click',()=>appendTapSymbol('.'));
+$('tap-dash').addEventListener('click',()=>appendTapSymbol('-'));
+$('tap-back').addEventListener('click',()=>{
   clearTapGapTimers();
-  if (tapMorse.endsWith(' / ')) tapMorse = tapMorse.slice(0, -3);
-  else if (tapMorse.endsWith(' ')) tapMorse = tapMorse.slice(0, -1);
-  else tapMorse = tapMorse.slice(0, -1);
-  tapLastInputAt = performance.now();
-  syncTapDecode();
-  if (tapMorse) scheduleTapGapTimers();
+  if(tapMorse.endsWith(' / ')) tapMorse=tapMorse.slice(0,-3);
+  else if(tapMorse.endsWith(' ')) tapMorse=tapMorse.slice(0,-1);
+  else tapMorse=tapMorse.slice(0,-1);
+  tapLastInputAt=performance.now(); updateDecode(tapMorse);
+  if(tapMorse) { const g=getTapGaps(); tapLetterGapTimer=setTimeout(()=>{tapMorse=tapMorse.replace(/\s+$/,'');if(!tapMorse.endsWith(' / '))tapMorse+=' ';updateDecode(tapMorse);},g.letter); }
 });
+$('tap-clr').addEventListener('click',()=>{ clearTapGapTimers(); tapMorse=''; tapLastInputAt=0; decodeOutput.textContent='Enter dots and dashes below...'; decodeOutput.classList.add('empty'); morseLive.innerHTML='<span class="cursor"></span>'; });
+$('btn-copy-decoded').addEventListener('click',async()=>{ if(decodeOutput.classList.contains('empty')) return; try{await navigator.clipboard.writeText(decodeOutput.textContent);setStatus('Copied');}catch{setStatus('Copy failed');} });
+$('btn-send-to-tx').addEventListener('click',()=>{ if(decodeOutput.classList.contains('empty')) return; textInput.value=decodeOutput.textContent; autoResizeMessageInput(); updateDisplay(); document.querySelector('[data-tab="transmit"]').click(); setStatus('Loaded into transmitter'); });
 
-document.getElementById('tap-clr').addEventListener('click', () => {
-  clearTapGapTimers();
-  tapMorse = '';
-  tapLastInputAt = 0;
-  decodeOutput.textContent = 'Enter dots and dashes below...';
-  decodeOutput.classList.add('empty');
-  morseLive.innerHTML = '<span class="cursor"></span>';
-});
-
-document.getElementById('btn-copy-decoded').addEventListener('click', async () => {
-  const txt = decodeOutput.textContent;
-  if (decodeOutput.classList.contains('empty')) return;
+async function previewRefCode(ch, code, el) {
+  if (transmitting||G.running) { setStatus('Stop transmission/scanner first'); return; }
+  const tok = ++refPreviewToken;
+  stopCurrentTone();
+  refGrid.querySelectorAll('.previewing').forEach(e=>e.classList.remove('previewing'));
+  el?.classList.add('previewing');
+  setStatus(`Previewing ${ch} ${code}`);
+  const dot = Math.max(getDotMs(), 70);
   try {
-    await navigator.clipboard.writeText(txt);
-    setStatus('Copied');
-  } catch {
-    setStatus('Copy failed');
-  }
-});
-
-document.getElementById('btn-send-to-tx').addEventListener('click', () => {
-  if (decodeOutput.classList.contains('empty')) return;
-  textInput.value = decodeOutput.textContent;
-  autoResizeMessageInput();
-  updateDisplay();
-  document.querySelector('[data-tab="transmit"]').click();
-  setStatus('Loaded into transmitter');
-});
-
-function setScanMode(mode) {
-  if (liveScanner.running) stopLiveScanner();
-  liveScanner.mode = mode;
-  scanModeAudioBtn.classList.toggle('active', mode === 'audio');
-  scanModeLightBtn.classList.toggle('active', mode === 'light');
-  btnScanStart.textContent = mode === 'audio' ? 'Start Listening' : 'Start Camera';
-  setStatus(mode === 'audio' ? 'Scanner mode: audio' : 'Scanner mode: light');
-}
-
-function buildAudioCandidateTable() {
-  const desired = parseInt(freqSlider.value, 10);
-  const base = [];
-  for (let f = 380; f <= 1100; f += 40) base.push(f);
-  for (let f = desired - 120; f <= desired + 120; f += 20) {
-    if (f >= 320 && f <= 1200) base.push(f);
-  }
-  const unique = [...new Set(base)].sort((a, b) => a - b);
-  return unique.map(freq => ({
-    freq,
-    smooth: 0,
-    ratioSmooth: 1
-  }));
-}
-
-function resetLiveScannerState() {
-  liveScanner.raw = '';
-  liveScanner.decodedText = '';
-  liveScanner.currentCode = '';
-  liveScanner.pendingWordGap = false;
-
-  liveScanner.dotEstimate = Math.max(55, getDotMs());
-  liveScanner.lastState = false;
-  liveScanner.lastChange = 0;
-  liveScanner.hasSignal = false;
-  liveScanner.shortOnSamples = [];
-  liveScanner.shortOffSamples = [];
-
-  liveScanner.audioCandidates = buildAudioCandidateTable();
-  liveScanner.audioLockedFreq = 0;
-  liveScanner.audioLockedScore = 0;
-  liveScanner.audioStateLatch = false;
-  liveScanner.audioFloor = 0.00001;
-  liveScanner.audioRmsFloor = 0.0025;
-  liveScanner.audioRmsSmooth = 0;
-  liveScanner.audioOnScore = 0;
-  liveScanner.audioOffScore = 0;
-  liveScanner.audioLastStrongAt = 0;
-
-  liveScanner.lightBaseline = 0;
-  liveScanner.lightSmoothed = 0;
-  liveScanner.lightContrastBaseline = 0;
-  liveScanner.lightContrastSmoothed = 0;
-  liveScanner.lightStateLatch = false;
-
-  liveScanner.calibratingUntil = performance.now() + 1000;
-
-  liveScanPulse.classList.remove('on');
-  liveScanState.textContent = 'Idle';
-  updateLiveScanQuality(0, 'Idle');
-  setLiveRenderedOutput();
-}
-
-function updateDotEstimateFromShortSamples() {
-  const onMed = median(liveScanner.shortOnSamples);
-  const offMed = median(liveScanner.shortOffSamples);
-  const candidates = [onMed, offMed].filter(v => v > 0 && Number.isFinite(v));
-  if (!candidates.length) return;
-  const shortest = Math.min(...candidates);
-  const bounded = clamp(shortest, 28, 550);
-  liveScanner.dotEstimate = liveScanner.dotEstimate * 0.78 + bounded * 0.22;
-}
-
-function appendRawSymbol(symbol) {
-  if (liveScanner.pendingWordGap) {
-    if (!liveScanner.raw.endsWith(' / ') && liveScanner.raw.length) liveScanner.raw += ' / ';
-    liveScanner.pendingWordGap = false;
-  }
-  liveScanner.raw += symbol;
-  setLiveRenderedOutput();
-}
-
-function appendRawLetterGap() {
-  if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ') && liveScanner.raw.length) {
-    liveScanner.raw += ' ';
-  }
-  setLiveRenderedOutput();
-}
-
-function queueWordGap() {
-  liveScanner.pendingWordGap = true;
-}
-
-function commitCurrentCode() {
-  if (!liveScanner.currentCode) return;
-  const char = MORSE_REV[liveScanner.currentCode] || '?';
-  if (liveScanner.pendingWordGap && liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
-    liveScanner.decodedText += ' ';
-    liveScanner.pendingWordGap = false;
-  }
-  liveScanner.decodedText += char;
-  liveScanner.currentCode = '';
-  setLiveRenderedOutput();
-}
-
-function commitWordGap() {
-  commitCurrentCode();
-  if (liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
-    liveScanner.decodedText += ' ';
-  }
-  queueWordGap();
-  setLiveRenderedOutput();
-}
-
-function classifyOnDuration(ms) {
-  const dot = clamp(liveScanner.dotEstimate, 28, 550);
-  const ratio = ms / dot;
-
-  if (ms <= dot * 1.9) {
-    pushLimited(liveScanner.shortOnSamples, ms, 14);
-    updateDotEstimateFromShortSamples();
-    return '.';
-  }
-
-  if (ratio < 2.3) {
-    const shortened = ms / 2;
-    pushLimited(liveScanner.shortOnSamples, shortened, 14);
-    updateDotEstimateFromShortSamples();
-    return '.';
-  }
-
-  return '-';
-}
-
-function classifyOffDuration(ms) {
-  const dot = clamp(liveScanner.dotEstimate, 28, 550);
-  const ratio = ms / dot;
-
-  if (ms <= dot * 1.75) {
-    pushLimited(liveScanner.shortOffSamples, ms, 14);
-    updateDotEstimateFromShortSamples();
-    return 'intra';
-  }
-
-  if (ratio < 5.0) {
-    return 'letter';
-  }
-
-  return 'word';
-}
-
-function processOnDuration(ms) {
-  const minPulse = Math.max(16, liveScanner.dotEstimate * 0.24);
-  if (ms < minPulse) return;
-  const symbol = classifyOnDuration(ms);
-  liveScanner.currentCode += symbol;
-  appendRawSymbol(symbol);
-  liveScanner.hasSignal = true;
-}
-
-function processOffDuration(ms) {
-  const minGap = Math.max(14, liveScanner.dotEstimate * 0.20);
-  if (ms < minGap) return;
-
-  const gapType = classifyOffDuration(ms);
-
-  if (gapType === 'intra') return;
-
-  if (gapType === 'letter') {
-    appendRawLetterGap();
-    commitCurrentCode();
-    return;
-  }
-
-  appendRawLetterGap();
-  commitWordGap();
-}
-
-function flushLiveDecoder(forceWord = false) {
-  if (liveScanner.lastChange) {
-    const now = performance.now();
-    const duration = now - liveScanner.lastChange;
-    if (liveScanner.lastState) processOnDuration(duration);
-    else processOffDuration(forceWord ? Math.max(duration, liveScanner.dotEstimate * 7) : duration);
-  }
-
-  if (forceWord) {
-    commitWordGap();
-  } else {
-    commitCurrentCode();
-  }
-
-  setLiveRenderedOutput();
-}
-
-function updateScannerSignal(isOn, stateLabel) {
-  if (!liveScanner.running) return;
-
-  liveScanPulse.classList.toggle('on', isOn);
-  if (stateLabel) liveScanState.textContent = stateLabel;
-
-  const now = performance.now();
-
-  if (!liveScanner.lastChange) {
-    liveScanner.lastChange = now;
-    liveScanner.lastState = isOn;
-    return;
-  }
-
-  if (isOn === liveScanner.lastState) {
-    if (!isOn && liveScanner.hasSignal) {
-      const offMs = now - liveScanner.lastChange;
-      const dot = clamp(liveScanner.dotEstimate, 28, 550);
-
-      if (offMs >= dot * 3.2 && liveScanner.currentCode) {
-        appendRawLetterGap();
-        commitCurrentCode();
-        liveScanner.lastChange = now;
-      }
-      if (offMs >= dot * 6.5 && liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
-        commitWordGap();
-        liveScanner.lastChange = now;
-      }
+    for (let i=0;i<code.length;i++) {
+      if (tok!==refPreviewToken) return;
+      setActive(true); await playTone(code[i]==='.'?dot:dot*3); setActive(false);
+      if (i<code.length-1) await sleep(dot);
     }
-    return;
-  }
-
-  const duration = now - liveScanner.lastChange;
-
-  if (liveScanner.lastState) processOnDuration(duration);
-  else processOffDuration(duration);
-
-  liveScanner.lastState = isOn;
-  liveScanner.lastChange = now;
-}
-
-function cleanupLiveMedia() {
-  if (liveScanner.rafId) {
-    cancelAnimationFrame(liveScanner.rafId);
-    liveScanner.rafId = null;
-  }
-  if (liveScanner.stream) {
-    liveScanner.stream.getTracks().forEach(track => {
-      try { track.stop(); } catch {}
-    });
-    liveScanner.stream = null;
-  }
-  liveScanVideo.srcObject = null;
-
-  if (liveScanner.source) {
-    try { liveScanner.source.disconnect(); } catch {}
-    liveScanner.source = null;
-  }
-  if (liveScanner.analyser) {
-    try { liveScanner.analyser.disconnect(); } catch {}
-    liveScanner.analyser = null;
-  }
-  if (liveScanner.audioCtx) {
-    try { liveScanner.audioCtx.close(); } catch {}
-    liveScanner.audioCtx = null;
-  }
-
-  liveScanner.freqData = null;
-  liveScanner.timeDataFloat = null;
-}
-
-async function stopLiveScanner() {
-  if (!liveScanner.running) return;
-  liveScanner.running = false;
-
-  flushLiveDecoder(true);
-
-  cleanupLiveMedia();
-  btnScanStart.style.display = '';
-  btnScanStop.style.display = 'none';
-  liveScanPulse.classList.remove('on');
-  liveScanState.textContent = 'Stopped';
-  updateLiveScanQuality(0, 'Stopped');
-  setStatus('Live scanner stopped');
-}
-
-function getBinMagnitude(freqData, sampleRate, fftSize, targetFreq) {
-  const binHz = sampleRate / fftSize;
-  const center = Math.round(targetFreq / binHz);
-
-  let total = 0;
-  let weightTotal = 0;
-  for (let i = -2; i <= 2; i++) {
-    const idx = center + i;
-    if (idx < 0 || idx >= freqData.length) continue;
-    const weight = i === 0 ? 1 : (Math.abs(i) === 1 ? 0.72 : 0.42);
-    total += Math.pow(10, freqData[idx] / 20) * weight;
-    weightTotal += weight;
-  }
-  return total / Math.max(weightTotal, 1e-6);
-}
-
-function getNeighbourNoise(freqData, sampleRate, fftSize, targetFreq) {
-  const binHz = sampleRate / fftSize;
-  const center = Math.round(targetFreq / binHz);
-
-  let total = 0;
-  let count = 0;
-  for (let i = -12; i <= 12; i++) {
-    if (Math.abs(i) <= 4) continue;
-    const idx = center + i;
-    if (idx < 0 || idx >= freqData.length) continue;
-    total += Math.pow(10, freqData[idx] / 20);
-    count++;
-  }
-  return total / Math.max(count, 1);
-}
-
-function detectToneBand(analyser, freqData, timeDataFloat) {
-  analyser.getFloatFrequencyData(freqData);
-  if (analyser.getFloatTimeDomainData) analyser.getFloatTimeDomainData(timeDataFloat);
-
-  const sampleRate = liveScanner.audioCtx.sampleRate;
-  const fftSize = analyser.fftSize;
-
-  let rms = 0;
-  for (let i = 0; i < timeDataFloat.length; i++) {
-    const s = timeDataFloat[i];
-    rms += s * s;
-  }
-  rms = Math.sqrt(rms / Math.max(1, timeDataFloat.length));
-  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth ? (liveScanner.audioRmsSmooth * 0.72 + rms * 0.28) : rms;
-
-  let best = null;
-  let second = null;
-
-  for (const cand of liveScanner.audioCandidates) {
-    const band = getBinMagnitude(freqData, sampleRate, fftSize, cand.freq);
-    const noise = getNeighbourNoise(freqData, sampleRate, fftSize, cand.freq);
-    const ratio = band / Math.max(noise, 1e-8);
-
-    cand.smooth = cand.smooth ? (cand.smooth * 0.64 + band * 0.36) : band;
-    cand.ratioSmooth = cand.ratioSmooth ? (cand.ratioSmooth * 0.60 + ratio * 0.40) : ratio;
-
-    const strength = cand.smooth * Math.pow(cand.ratioSmooth, 1.18);
-
-    if (!best || strength > best.strength) {
-      second = best;
-      best = { cand, strength };
-    } else if (!second || strength > second.strength) {
-      second = { cand, strength };
-    }
-  }
-
-  const bestCand = best?.cand;
-  const secondStrength = second?.strength || 0;
-  const bestStrength = best?.strength || 0;
-  const bestFreq = bestCand?.freq || 0;
-  const bestBand = bestCand?.smooth || 0;
-  const bestRatio = bestCand?.ratioSmooth || 1;
-  const separation = bestStrength / Math.max(secondStrength, 1e-8);
-
-  if (!liveScanner.audioStateLatch) {
-    liveScanner.audioFloor = liveScanner.audioFloor * 0.986 + Math.min(bestBand, liveScanner.audioFloor * 1.8) * 0.014;
-    liveScanner.audioRmsFloor = liveScanner.audioRmsFloor * 0.986 + liveScanner.audioRmsSmooth * 0.014;
-  }
-
-  if (performance.now() < liveScanner.calibratingUntil) {
-    liveScanner.audioLockedFreq = 0;
-    liveScanner.audioLockedScore = 0;
-    liveScanner.audioStateLatch = false;
-    return { on: false, label: 'Calibrating mic', quality: 0.12, qualityLabel: 'Calibrating' };
-  }
-
-  const lockScore =
-    clamp((bestRatio - 1.15) / 1.2, 0, 1) * 0.48 +
-    clamp((bestBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.2, 0.003), 0, 1) * 0.22 +
-    clamp((liveScanner.audioRmsSmooth - Math.max(liveScanner.audioRmsFloor * 1.0, 0.0035)) / Math.max(liveScanner.audioRmsFloor * 1.8, 0.012), 0, 1) * 0.14 +
-    clamp((separation - 1.0) / 0.8, 0, 1) * 0.16;
-
-  if (!liveScanner.audioLockedFreq) {
-    if (lockScore > 0.42) {
-      liveScanner.audioLockedFreq = bestFreq;
-      liveScanner.audioLockedScore = lockScore;
-    }
-  } else {
-    const lockCand = liveScanner.audioCandidates.find(c => c.freq === liveScanner.audioLockedFreq);
-    const lockStrength = lockCand ? (lockCand.smooth * Math.pow(lockCand.ratioSmooth, 1.18)) : 0;
-    const bestClose = Math.abs(bestFreq - liveScanner.audioLockedFreq) <= 80;
-
-    if (bestClose || lockStrength >= bestStrength * 0.72) {
-      liveScanner.audioLockedScore = liveScanner.audioLockedScore * 0.72 + lockScore * 0.28;
-    } else if (lockScore > liveScanner.audioLockedScore + 0.14) {
-      liveScanner.audioLockedFreq = bestFreq;
-      liveScanner.audioLockedScore = lockScore;
-    } else {
-      liveScanner.audioLockedScore *= 0.992;
-    }
-  }
-
-  const activeFreq = liveScanner.audioLockedFreq || bestFreq;
-  const activeCand = liveScanner.audioCandidates.find(c => c.freq === activeFreq) || bestCand;
-  const activeBand = activeCand?.smooth || bestBand;
-  const activeRatio = activeCand?.ratioSmooth || bestRatio;
-
-  const onMetric =
-    clamp((activeRatio - 1.18) / 0.9, 0, 1) * 0.54 +
-    clamp((activeBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.0, 0.003), 0, 1) * 0.28 +
-    clamp((liveScanner.audioRmsSmooth - Math.max(liveScanner.audioRmsFloor * 1.0, 0.0035)) / Math.max(liveScanner.audioRmsFloor * 1.7, 0.012), 0, 1) * 0.18;
-
-  const offMetric =
-    clamp((1.18 - activeRatio) / 0.32, 0, 1) * 0.58 +
-    clamp((liveScanner.audioFloor * 1.08 - activeBand) / Math.max(liveScanner.audioFloor * 0.9, 0.002), 0, 1) * 0.22 +
-    clamp((Math.max(liveScanner.audioRmsFloor * 0.98, 0.0025) - liveScanner.audioRmsSmooth) / Math.max(liveScanner.audioRmsFloor * 0.65, 0.01), 0, 1) * 0.20;
-
-  liveScanner.audioOnScore = liveScanner.audioOnScore * 0.55 + onMetric * 0.45;
-  liveScanner.audioOffScore = liveScanner.audioOffScore * 0.55 + offMetric * 0.45;
-
-  if (liveScanner.audioOnScore > 0.50 && liveScanner.audioLockedScore > 0.25) {
-    liveScanner.audioLastStrongAt = performance.now();
-  }
-
-  if (!liveScanner.audioStateLatch && liveScanner.audioOnScore > 0.52 && liveScanner.audioLockedScore > 0.28) {
-    liveScanner.audioStateLatch = true;
-  }
-  if (liveScanner.audioStateLatch && (liveScanner.audioOffScore > 0.58 || (performance.now() - liveScanner.audioLastStrongAt > 260 && liveScanner.audioLockedScore < 0.20))) {
-    liveScanner.audioStateLatch = false;
-  }
-
-  const quality = clamp(
-    liveScanner.audioLockedScore * 0.52 +
-    clamp((activeRatio - 1.0) / 1.1, 0, 1) * 0.30 +
-    clamp((separation - 1.0) / 0.8, 0, 1) * 0.18,
-    0, 1
-  );
-
-  const freqLabel = activeFreq ? `${Math.round(activeFreq)}Hz` : 'searching';
-  const qualityLabel = liveScanner.audioStateLatch
-    ? (quality > 0.74 ? `Locked ${freqLabel}` : `Weak lock ${freqLabel}`)
-    : (quality > 0.40 ? `Searching ${freqLabel}` : 'Noisy');
-
-  return {
-    on: liveScanner.audioStateLatch,
-    label: liveScanner.audioStateLatch ? `Tone ${freqLabel}` : `Listening ${freqLabel}`,
-    quality,
-    qualityLabel
-  };
-}
-
-async function startAudioScanner() {
-  if (!navigator.mediaDevices?.getUserMedia || !(window.AudioContext || window.webkitAudioContext)) {
-    setStatus('Microphone input not supported');
-    liveScanState.textContent = 'Mic unsupported';
-    return false;
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false,
-      channelCount: 1
-    }
-  });
-
-  const AudioCtor = window.AudioContext || window.webkitAudioContext;
-  const ctx = new AudioCtor();
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 4096;
-  analyser.smoothingTimeConstant = 0.04;
-  analyser.minDecibels = -100;
-  analyser.maxDecibels = -10;
-
-  const source = ctx.createMediaStreamSource(stream);
-  source.connect(analyser);
-
-  liveScanner.stream = stream;
-  liveScanner.audioCtx = ctx;
-  liveScanner.analyser = analyser;
-  liveScanner.source = source;
-  liveScanner.freqData = new Float32Array(analyser.frequencyBinCount);
-  liveScanner.timeDataFloat = new Float32Array(analyser.fftSize);
-
-  const loop = () => {
-    if (!liveScanner.running || liveScanner.mode !== 'audio' || !liveScanner.analyser) return;
-    const info = detectToneBand(analyser, liveScanner.freqData, liveScanner.timeDataFloat);
-    updateLiveScanQuality(info.quality ?? 0, info.qualityLabel || 'Listening');
-    updateScannerSignal(info.on, info.label);
-    liveScanner.rafId = requestAnimationFrame(loop);
-  };
-  loop();
-  return true;
-}
-
-function sampleLightRegions(frame, width, height) {
-  const centerStartX = Math.floor(width * 0.34);
-  const centerEndX = Math.floor(width * 0.66);
-  const centerStartY = Math.floor(height * 0.34);
-  const centerEndY = Math.floor(height * 0.66);
-
-  let centerTotal = 0;
-  let centerCount = 0;
-  let outerTotal = 0;
-  let outerCount = 0;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      const brightness = frame[i] * 0.299 + frame[i + 1] * 0.587 + frame[i + 2] * 0.114;
-      const inCenter = x >= centerStartX && x < centerEndX && y >= centerStartY && y < centerEndY;
-      if (inCenter) {
-        centerTotal += brightness;
-        centerCount++;
-      } else {
-        outerTotal += brightness;
-        outerCount++;
-      }
-    }
-  }
-
-  const center = centerTotal / Math.max(1, centerCount);
-  const outer = outerTotal / Math.max(1, outerCount);
-  return { center, outer, contrast: center - outer };
-}
-
-async function startLightScanner() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    setStatus('Camera input not supported');
-    liveScanState.textContent = 'Camera unsupported';
-    return false;
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: { ideal: 'environment' },
-      width: { ideal: 320 },
-      height: { ideal: 240 }
-    },
-    audio: false
-  });
-
-  liveScanner.stream = stream;
-  liveScanVideo.srcObject = stream;
-  await liveScanVideo.play();
-
-  const canvas = liveScanCanvas;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  const loop = () => {
-    if (!liveScanner.running || liveScanner.mode !== 'light' || !liveScanner.stream) return;
-
-    if (liveScanVideo.readyState >= 2) {
-      ctx.drawImage(liveScanVideo, 0, 0, canvas.width, canvas.height);
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      const sample = sampleLightRegions(frame, canvas.width, canvas.height);
-      const brightness = sample.center;
-      const contrast = sample.contrast;
-
-      if (!liveScanner.lightBaseline) liveScanner.lightBaseline = brightness;
-      if (!liveScanner.lightSmoothed) liveScanner.lightSmoothed = brightness;
-      if (!liveScanner.lightContrastBaseline) liveScanner.lightContrastBaseline = contrast;
-      if (!liveScanner.lightContrastSmoothed) liveScanner.lightContrastSmoothed = contrast;
-
-      liveScanner.lightSmoothed = liveScanner.lightSmoothed * 0.76 + brightness * 0.24;
-      liveScanner.lightContrastSmoothed = liveScanner.lightContrastSmoothed * 0.72 + contrast * 0.28;
-
-      if (!liveScanner.lightStateLatch) {
-        liveScanner.lightBaseline = liveScanner.lightBaseline * 0.97 + liveScanner.lightSmoothed * 0.03;
-        liveScanner.lightContrastBaseline = liveScanner.lightContrastBaseline * 0.955 + liveScanner.lightContrastSmoothed * 0.045;
-      }
-
-      if (performance.now() < liveScanner.calibratingUntil) {
-        updateLiveScanQuality(0.12, 'Calibrating');
-        updateScannerSignal(false, 'Calibrating camera');
-        liveScanner.rafId = requestAnimationFrame(loop);
-        return;
-      }
-
-      const brightnessDelta = liveScanner.lightSmoothed - liveScanner.lightBaseline;
-      const contrastDelta = liveScanner.lightContrastSmoothed - liveScanner.lightContrastBaseline;
-
-      const onContrast = Math.max(8.5, liveScanner.lightContrastBaseline * 0.18 + 8);
-      const offContrast = Math.max(3.4, onContrast * 0.46);
-      const onBrightness = Math.max(10, Math.abs(liveScanner.lightBaseline) * 0.065);
-      const offBrightness = Math.max(4.2, onBrightness * 0.42);
-
-      if (!liveScanner.lightStateLatch && contrastDelta > onContrast && brightnessDelta > onBrightness) {
-        liveScanner.lightStateLatch = true;
-      }
-      if (liveScanner.lightStateLatch && (contrastDelta < offContrast || brightnessDelta < offBrightness)) {
-        liveScanner.lightStateLatch = false;
-      }
-
-      const contrastScore = clamp(contrastDelta / Math.max(onContrast, 1), 0, 1);
-      const brightnessScore = clamp(brightnessDelta / Math.max(onBrightness, 1), 0, 1);
-      const lightQuality = clamp(contrastScore * 0.62 + brightnessScore * 0.38, 0, 1);
-
-      updateLiveScanQuality(
-        lightQuality,
-        liveScanner.lightStateLatch
-          ? (lightQuality > 0.72 ? 'Locked' : 'Weak lock')
-          : (lightQuality > 0.42 ? 'Searching' : 'Dim/noisy')
-      );
-
-      updateScannerSignal(liveScanner.lightStateLatch, liveScanner.lightStateLatch ? 'Light detected' : 'Watching light');
-    }
-
-    liveScanner.rafId = requestAnimationFrame(loop);
-  };
-
-  loop();
-  return true;
-}
-
-async function startLiveScanner() {
-  if (liveScanner.running) return;
-
-  resetLiveScannerState();
-  liveScanner.running = true;
-  btnScanStart.style.display = 'none';
-  btnScanStop.style.display = '';
-  liveScanState.textContent = liveScanner.mode === 'audio' ? 'Starting microphone...' : 'Starting camera...';
-  updateLiveScanQuality(0.08, 'Starting');
-  setStatus(liveScanner.mode === 'audio' ? 'Starting live audio scanner...' : 'Starting live light scanner...');
-
-  try {
-    const ok = liveScanner.mode === 'audio' ? await startAudioScanner() : await startLightScanner();
-    if (!ok) {
-      liveScanner.running = false;
-      btnScanStart.style.display = '';
-      btnScanStop.style.display = 'none';
-      updateLiveScanQuality(0, 'Unavailable');
-      return;
-    }
-
-    liveScanner.lastChange = performance.now();
-    liveScanner.lastState = false;
-    setStatus(liveScanner.mode === 'audio' ? 'Listening for Morse tone...' : 'Watching for Morse light...');
-  } catch (e) {
-    liveScanner.running = false;
-    cleanupLiveMedia();
-    btnScanStart.style.display = '';
-    btnScanStop.style.display = 'none';
-    liveScanState.textContent = /denied|permission/i.test(String(e?.message || e)) ? 'Permission denied' : 'Unavailable';
-    updateLiveScanQuality(0, /denied|permission/i.test(String(e?.message || e)) ? 'Permission' : 'Unavailable');
-    setStatus(liveScanner.mode === 'audio' ? 'Microphone unavailable' : 'Camera unavailable');
-  }
+    if (tok===refPreviewToken) setStatus(`Preview: ${ch} ${code}`);
+  } finally { if(tok===refPreviewToken){stopCurrentTone();refGrid.querySelectorAll('.previewing').forEach(e=>e.classList.remove('previewing'));setActive(false);} }
 }
 
 function buildRef() {
-  const entries = [
-    ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c => [c, MORSE[c]]),
-    ...'0123456789'.split('').map(c => [c, MORSE[c]]),
-    ['.', '.-.-.-'], [',', '--..--'], ['?', '..--..'], ['!', '-.-.--'],
-    ['/', '-..-.'], ['+', '.-.-.'], ['-', '-....-'], ['=', '-...-'], ['@', '.--.-.']
-  ];
-  refGrid.innerHTML = entries
-    .map(([ch, code]) => `<button type="button" class="ref-item" data-char="${ch}" data-code="${code}" title="Play ${ch} ${code}"><span class="ref-char">${ch}</span><span class="ref-code">${code}</span></button>`)
-    .join('');
+  const entries = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>[c,MORSE[c]]), ...'0123456789'.split('').map(c=>[c,MORSE[c]]), ['.','.-.-.-'],[',','--..--'],['?','..--..'],['!','-.-.--'],['/','-..-.'],['+','.-.-.'],['-','-....-'],['=','-...-'],['@','.--.-.']];
+  refGrid.innerHTML = entries.map(([ch,code])=>`<button type="button" class="ref-item" data-char="${ch}" data-code="${code}" title="Play ${ch} ${code}"><span class="ref-char">${ch}</span><span class="ref-code">${code}</span></button>`).join('');
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  $('tab-'+btn.dataset.tab).classList.add('active');
+}));
 
-textInput.addEventListener('input', () => {
-  autoResizeMessageInput();
-  updateDisplay();
-});
-
-textInput.addEventListener('pointerdown', (e) => {
-  messagePointerStartY = e.clientY;
-  messagePointerStartX = e.clientX;
-  messagePointerMoved = false;
-  suppressNextFocus = false;
-});
-
-textInput.addEventListener('pointermove', (e) => {
-  const dy = Math.abs(e.clientY - messagePointerStartY);
-  const dx = Math.abs(e.clientX - messagePointerStartX);
-
-  if (dy > 10 || dx > 10) {
-    messagePointerMoved = true;
-  }
-
-  if (dy > 14 && dy > dx) {
-    suppressNextFocus = true;
-    textInput.blur();
-  }
-}, { passive: true });
-
-textInput.addEventListener('click', (e) => {
-  if (messagePointerMoved) {
-    e.preventDefault();
-    suppressNextFocus = true;
-    textInput.blur();
-  }
-});
-
-textInput.addEventListener('focus', () => {
-  if (suppressNextFocus) {
-    requestAnimationFrame(() => textInput.blur());
-    suppressNextFocus = false;
-  }
-});
-
-wpmSlider.addEventListener('input', () => {
-  wpmVal.textContent = wpmSlider.value;
-  updateOptionsSummary();
-  updateDisplay();
-});
-
-freqSlider.addEventListener('input', () => {
-  freqVal.textContent = freqSlider.value + 'Hz';
-  updateOptionsSummary();
-  if (liveScanner.running && liveScanner.mode === 'audio') {
-    liveScanner.audioCandidates = buildAudioCandidateTable();
-    liveScanner.audioLockedFreq = 0;
-    liveScanner.audioLockedScore = 0;
-    liveScanner.calibratingUntil = performance.now() + 250;
-  }
-});
-
-txOptionsToggle.addEventListener('click', () => toggleOptions());
-
-togFlash.addEventListener('change', () => {
-  flashWarning.classList.toggle('visible', togFlash.checked);
-  if (!togFlash.checked) releaseTorch();
-  updateDisplay();
-});
-
+textInput.addEventListener('input', () => { autoResizeMessageInput(); updateDisplay(); });
+wpmSlider.addEventListener('input', () => { wpmVal.textContent=wpmSlider.value; updateOptionsSummary(); updateDisplay(); });
+freqSlider.addEventListener('input', () => { freqVal.textContent=freqSlider.value+'Hz'; updateOptionsSummary(); });
+txOptionsToggle.addEventListener('click', () => { const o=txOptionsBox.classList.toggle('open'); txOptionsToggle.setAttribute('aria-expanded',String(o)); });
+togFlash.addEventListener('change', () => { flashWarning.classList.toggle('visible',togFlash.checked); if(!togFlash.checked) releaseTorch(); updateDisplay(); });
 btnTransmit.addEventListener('click', transmit);
-btnStop.addEventListener('click', () => {
-  stopRequested = true;
-  stopCurrentTone();
-  releaseTorch();
-  setStatus('Stopping...');
-});
+btnStop.addEventListener('click', () => { stopRequested=true; stopCurrentTone(); releaseTorch(); setStatus('Stopping...'); });
 btnSaveAudio.addEventListener('click', saveMorseAudio);
-btnClear.addEventListener('click', () => {
-  textInput.value = '';
-  autoResizeMessageInput();
-  updateDisplay();
-  setStatus('Ready');
-});
-
-refGrid.addEventListener('click', (event) => {
-  const btn = event.target.closest('.ref-item');
-  if (!btn) return;
-  previewRefCode(btn.dataset.char, btn.dataset.code, btn);
-});
-
+btnClear.addEventListener('click', () => { textInput.value=''; autoResizeMessageInput(); updateDisplay(); setStatus('Ready'); });
+refGrid.addEventListener('click', e => { const btn=e.target.closest('.ref-item'); if(btn) previewRefCode(btn.dataset.char, btn.dataset.code, btn); });
 scanModeAudioBtn.addEventListener('click', () => setScanMode('audio'));
 scanModeLightBtn.addEventListener('click', () => setScanMode('light'));
 btnScanStart.addEventListener('click', startLiveScanner);
 btnScanStop.addEventListener('click', stopLiveScanner);
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && liveScanner.running) stopLiveScanner();
+scanFreqSlider.addEventListener('input', () => {
+  scanFreqVal.textContent = scanFreqSlider.value + 'Hz';
+  G.targetFreq = parseInt(scanFreqSlider.value, 10);
+  if (!togAutoFreq.checked) G.detectedFreq = G.targetFreq;
 });
-window.addEventListener('beforeunload', () => {
-  cleanupLiveMedia();
-  releaseTorch();
-  stopCurrentTone();
+scanSensSlider.addEventListener('input', () => {
+  scanSensVal.textContent = scanSensSlider.value;
+  G.sensitivity = parseInt(scanSensSlider.value, 10);
+  computeSensitivityThresholds();
 });
+togAutoFreq.addEventListener('change', () => {
+  G.autoDetect = togAutoFreq.checked;
+  scanFreqSlider.disabled = togAutoFreq.checked;
+  if (!togAutoFreq.checked) G.detectedFreq = parseInt(scanFreqSlider.value, 10);
+});
+
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.running) stopLiveScanner(); });
+window.addEventListener('beforeunload', () => { cleanupScanner(); releaseTorch(); stopCurrentTone(); });
 
 autoResizeMessageInput();
 updateOptionsSummary();
 updateDisplay();
 buildRef();
+setScanMode('audio');
+computeSensitivityThresholds();
 setStatus('Ready');
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
 }
 </script>
 </body>
