@@ -553,7 +553,7 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div class="scanner-hint">
-      Audio mode now auto-locks onto the strongest Morse tone and adapts to speaker, mic, and room noise. Light mode samples the center of the camera frame with stronger hysteresis to reduce false triggers.
+      Audio mode auto-locks to the strongest stable tone, then decodes with stricter timing commits. For best speaker-to-mic results, keep volume around 40–80% and hold the receiving mic close to the sending speaker.
     </div>
 
     <video id="live-scan-video" class="scanner-hidden-media" playsinline muted></video>
@@ -690,12 +690,6 @@ let suppressNextFocus = false;
 const liveScanner = {
   mode: 'audio',
   running: false,
-  raw: '',
-  dotEstimate: 80,
-  lastState: false,
-  lastChange: 0,
-  gapLevel: 0,
-  hasSignal: false,
   rafId: null,
   stream: null,
   audioCtx: null,
@@ -703,33 +697,44 @@ const liveScanner = {
   source: null,
   freqData: null,
   timeDataFloat: null,
-  timeDataByte: null,
 
   signalQuality: 0,
   signalQualityLabel: 'Idle',
 
-  toneSamples: [],
-  gapSamples: [],
+  // raw rendered morse + final decoded text
+  raw: '',
+  decodedText: '',
+  currentCode: '',
+  pendingWordGap: false,
 
-  calibratingUntil: 0,
-  audioStateLatch: false,
-  audioFloor: 0.00001,
-  audioRmsFloor: 0.002,
-  audioRmsSmooth: 0,
-  audioOnScore: 0,
-  audioOffScore: 0,
-  audioPeakHold: 0,
+  // timing
+  dotEstimate: 80,
+  lastState: false,
+  lastChange: 0,
+  hasSignal: false,
+  shortOnSamples: [],
+  shortOffSamples: [],
+
+  // audio detection
   audioCandidates: [],
   audioLockedFreq: 0,
   audioLockedScore: 0,
-  audioBestFreq: 0,
-  audioLastToneSeenAt: 0,
+  audioStateLatch: false,
+  audioFloor: 0.00001,
+  audioRmsFloor: 0.0025,
+  audioRmsSmooth: 0,
+  audioOnScore: 0,
+  audioOffScore: 0,
+  audioLastStrongAt: 0,
 
+  // light detection
   lightBaseline: 0,
   lightSmoothed: 0,
   lightContrastBaseline: 0,
   lightContrastSmoothed: 0,
-  lightStateLatch: false
+  lightStateLatch: false,
+
+  calibratingUntil: 0
 };
 
 function setStatus(msg) { statusText.textContent = msg; }
@@ -744,7 +749,7 @@ function getTransmitDotMs(useTorch = togFlash.checked) {
   return useTorch ? Math.max(dot, 140) : dot;
 }
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
-function pushLimited(list, value, limit = 18) {
+function pushLimited(list, value, limit = 20) {
   list.push(value);
   if (list.length > limit) list.splice(0, list.length - limit);
 }
@@ -754,42 +759,20 @@ function median(values) {
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
-function nearestIndex(value, centroids) {
-  let best = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < centroids.length; i++) {
-    const dist = Math.abs(value - centroids[i]);
-    if (dist < bestDist) {
-      best = i;
-      bestDist = dist;
-    }
-  }
-  return best;
-}
-function clusterDurations(samples, fallbackCentroids) {
-  if (!samples.length) return [...fallbackCentroids];
 
-  const sorted = [...samples].sort((a, b) => a - b);
-  const min = sorted[0];
-  const max = sorted[sorted.length - 1];
-  if (sorted.length < fallbackCentroids.length + 1 || max < min * 1.45) return [...fallbackCentroids];
+function setLiveRenderedOutput() {
+  liveScanMorse.textContent = liveScanner.raw || 'Waiting for live input...';
+  liveScanMorse.classList.toggle('empty', !liveScanner.raw);
 
-  let centroids = [...fallbackCentroids];
-  for (let pass = 0; pass < 6; pass++) {
-    const buckets = centroids.map(() => []);
-    for (const sample of sorted) buckets[nearestIndex(sample, centroids)].push(sample);
-    centroids = centroids.map((centroid, i) => buckets[i].length ? median(buckets[i]) : centroid);
+  if (liveScanner.decodedText) {
+    liveScanOutput.textContent = liveScanner.decodedText;
+    liveScanOutput.classList.remove('empty');
+  } else {
+    liveScanOutput.textContent = 'Decoded live text will appear here...';
+    liveScanOutput.classList.add('empty');
   }
-  return centroids.sort((a, b) => a - b);
 }
-function getToneCentroids() {
-  const dot = liveScanner.dotEstimate || getDotMs();
-  return clusterDurations(liveScanner.toneSamples, [dot, dot * 3]);
-}
-function getGapCentroids() {
-  const dot = liveScanner.dotEstimate || getDotMs();
-  return clusterDurations(liveScanner.gapSamples, [dot, dot * 3, dot * 7]);
-}
+
 function updateLiveScanQuality(score, label) {
   liveScanner.signalQuality = clamp(score, 0, 1);
   liveScanner.signalQualityLabel = label;
@@ -1494,169 +1477,219 @@ function buildAudioCandidateTable() {
   return unique.map(freq => ({
     freq,
     smooth: 0,
-    ratioSmooth: 1,
-    lastSeenAt: 0
+    ratioSmooth: 1
   }));
 }
 
 function resetLiveScannerState() {
   liveScanner.raw = '';
+  liveScanner.decodedText = '';
+  liveScanner.currentCode = '';
+  liveScanner.pendingWordGap = false;
+
   liveScanner.dotEstimate = Math.max(55, getDotMs());
   liveScanner.lastState = false;
   liveScanner.lastChange = 0;
-  liveScanner.gapLevel = 0;
   liveScanner.hasSignal = false;
-  liveScanner.audioFloor = 0.00001;
-  liveScanner.audioRmsFloor = 0.002;
-  liveScanner.audioRmsSmooth = 0;
-  liveScanner.audioOnScore = 0;
-  liveScanner.audioOffScore = 0;
-  liveScanner.audioPeakHold = 0;
+  liveScanner.shortOnSamples = [];
+  liveScanner.shortOffSamples = [];
+
   liveScanner.audioCandidates = buildAudioCandidateTable();
   liveScanner.audioLockedFreq = 0;
   liveScanner.audioLockedScore = 0;
-  liveScanner.audioBestFreq = 0;
-  liveScanner.audioLastToneSeenAt = 0;
   liveScanner.audioStateLatch = false;
+  liveScanner.audioFloor = 0.00001;
+  liveScanner.audioRmsFloor = 0.0025;
+  liveScanner.audioRmsSmooth = 0;
+  liveScanner.audioOnScore = 0;
+  liveScanner.audioOffScore = 0;
+  liveScanner.audioLastStrongAt = 0;
+
   liveScanner.lightBaseline = 0;
   liveScanner.lightSmoothed = 0;
   liveScanner.lightContrastBaseline = 0;
   liveScanner.lightContrastSmoothed = 0;
   liveScanner.lightStateLatch = false;
-  liveScanner.calibratingUntil = performance.now() + 1100;
-  liveScanner.toneSamples = [];
-  liveScanner.gapSamples = [];
-  liveScanner.signalQuality = 0;
-  liveScanner.signalQualityLabel = 'Idle';
-  liveScanMorse.textContent = 'Waiting for live input...';
-  liveScanMorse.classList.add('empty');
-  liveScanOutput.textContent = 'Decoded live text will appear here...';
-  liveScanOutput.classList.add('empty');
+
+  liveScanner.calibratingUntil = performance.now() + 1000;
+
   liveScanPulse.classList.remove('on');
   liveScanState.textContent = 'Idle';
   updateLiveScanQuality(0, 'Idle');
+  setLiveRenderedOutput();
 }
 
-function updateLiveOutputs() {
-  if (liveScanner.raw.trim()) {
-    liveScanMorse.textContent = liveScanner.raw.trim();
-    liveScanMorse.classList.remove('empty');
-    const decoded = decodeMorse(liveScanner.raw);
-    if (decoded) {
-      liveScanOutput.textContent = decoded;
-      liveScanOutput.classList.remove('empty');
-    } else {
-      liveScanOutput.textContent = 'Decoded live text will appear here...';
-      liveScanOutput.classList.add('empty');
-    }
+function updateDotEstimateFromShortSamples() {
+  const onMed = median(liveScanner.shortOnSamples);
+  const offMed = median(liveScanner.shortOffSamples);
+  const candidates = [onMed, offMed].filter(v => v > 0 && Number.isFinite(v));
+  if (!candidates.length) return;
+  const shortest = Math.min(...candidates);
+  const bounded = clamp(shortest, 28, 550);
+  liveScanner.dotEstimate = liveScanner.dotEstimate * 0.78 + bounded * 0.22;
+}
+
+function appendRawSymbol(symbol) {
+  if (liveScanner.pendingWordGap) {
+    if (!liveScanner.raw.endsWith(' / ') && liveScanner.raw.length) liveScanner.raw += ' / ';
+    liveScanner.pendingWordGap = false;
+  }
+  liveScanner.raw += symbol;
+  setLiveRenderedOutput();
+}
+
+function appendRawLetterGap() {
+  if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ') && liveScanner.raw.length) {
+    liveScanner.raw += ' ';
+  }
+  setLiveRenderedOutput();
+}
+
+function queueWordGap() {
+  liveScanner.pendingWordGap = true;
+}
+
+function commitCurrentCode() {
+  if (!liveScanner.currentCode) return;
+  const char = MORSE_REV[liveScanner.currentCode] || '?';
+  if (liveScanner.pendingWordGap && liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
+    liveScanner.decodedText += ' ';
+    liveScanner.pendingWordGap = false;
+  }
+  liveScanner.decodedText += char;
+  liveScanner.currentCode = '';
+  setLiveRenderedOutput();
+}
+
+function commitWordGap() {
+  commitCurrentCode();
+  if (liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
+    liveScanner.decodedText += ' ';
+  }
+  queueWordGap();
+  setLiveRenderedOutput();
+}
+
+function classifyOnDuration(ms) {
+  const dot = clamp(liveScanner.dotEstimate, 28, 550);
+  const ratio = ms / dot;
+
+  if (ms <= dot * 1.9) {
+    pushLimited(liveScanner.shortOnSamples, ms, 14);
+    updateDotEstimateFromShortSamples();
+    return '.';
+  }
+
+  if (ratio < 2.3) {
+    const shortened = ms / 2;
+    pushLimited(liveScanner.shortOnSamples, shortened, 14);
+    updateDotEstimateFromShortSamples();
+    return '.';
+  }
+
+  return '-';
+}
+
+function classifyOffDuration(ms) {
+  const dot = clamp(liveScanner.dotEstimate, 28, 550);
+  const ratio = ms / dot;
+
+  if (ms <= dot * 1.75) {
+    pushLimited(liveScanner.shortOffSamples, ms, 14);
+    updateDotEstimateFromShortSamples();
+    return 'intra';
+  }
+
+  if (ratio < 5.0) {
+    return 'letter';
+  }
+
+  return 'word';
+}
+
+function processOnDuration(ms) {
+  const minPulse = Math.max(16, liveScanner.dotEstimate * 0.24);
+  if (ms < minPulse) return;
+  const symbol = classifyOnDuration(ms);
+  liveScanner.currentCode += symbol;
+  appendRawSymbol(symbol);
+  liveScanner.hasSignal = true;
+}
+
+function processOffDuration(ms) {
+  const minGap = Math.max(14, liveScanner.dotEstimate * 0.20);
+  if (ms < minGap) return;
+
+  const gapType = classifyOffDuration(ms);
+
+  if (gapType === 'intra') return;
+
+  if (gapType === 'letter') {
+    appendRawLetterGap();
+    commitCurrentCode();
+    return;
+  }
+
+  appendRawLetterGap();
+  commitWordGap();
+}
+
+function flushLiveDecoder(forceWord = false) {
+  if (liveScanner.lastChange) {
+    const now = performance.now();
+    const duration = now - liveScanner.lastChange;
+    if (liveScanner.lastState) processOnDuration(duration);
+    else processOffDuration(forceWord ? Math.max(duration, liveScanner.dotEstimate * 7) : duration);
+  }
+
+  if (forceWord) {
+    commitWordGap();
   } else {
-    liveScanMorse.textContent = 'Waiting for live input...';
-    liveScanMorse.classList.add('empty');
-    liveScanOutput.textContent = 'Decoded live text will appear here...';
-    liveScanOutput.classList.add('empty');
+    commitCurrentCode();
   }
-}
 
-function appendLiveRaw(fragment) {
-  liveScanner.raw += fragment;
-  updateLiveOutputs();
-}
-
-function trimLiveTrailingSpace() {
-  if (liveScanner.raw.endsWith(' / ')) liveScanner.raw = liveScanner.raw.slice(0, -3);
-  else if (liveScanner.raw.endsWith(' ')) liveScanner.raw = liveScanner.raw.slice(0, -1);
-}
-
-function adaptDotEstimate(unitMs) {
-  const bounded = Math.max(28, Math.min(550, unitMs));
-  liveScanner.dotEstimate = liveScanner.dotEstimate * 0.76 + bounded * 0.24;
-}
-
-function commitToneDuration(ms) {
-  const centroids = getToneCentroids();
-  const shortTone = centroids[0];
-  const longTone = centroids[1];
-  const isDash = longTone > shortTone * 1.34 && nearestIndex(ms, centroids) === 1;
-  appendLiveRaw(isDash ? '-' : '.');
-  pushLimited(liveScanner.toneSamples, ms);
-  adaptDotEstimate(isDash ? longTone / 3 : shortTone);
-}
-
-function commitGapDuration(ms) {
-  pushLimited(liveScanner.gapSamples, ms);
-  const centroids = getGapCentroids();
-  const shortGap = centroids[0];
-  const midGap = centroids[1];
-  const longGap = centroids[2];
-  const cluster = nearestIndex(ms, centroids);
-
-  if ((cluster === 2 && longGap > midGap * 1.4) || ms >= midGap * 1.75) {
-    trimLiveTrailingSpace();
-    appendLiveRaw(' / ');
-    liveScanner.gapLevel = 2;
-    adaptDotEstimate(longGap / 7);
-  } else if ((cluster >= 1 && midGap > shortGap * 1.38) || ms >= shortGap * 2.05) {
-    if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
-    liveScanner.gapLevel = 1;
-    adaptDotEstimate(midGap / 3);
-  } else {
-    liveScanner.gapLevel = 0;
-    adaptDotEstimate(shortGap);
-  }
-}
-
-function maybeCommitIdleGap(now) {
-  if (!liveScanner.running || liveScanner.lastState || !liveScanner.hasSignal) return;
-  const [shortGap, midGap, longGap] = getGapCentroids();
-  const offMs = now - liveScanner.lastChange;
-
-  if (liveScanner.gapLevel < 1 && offMs >= Math.max(shortGap * 2.0, midGap * 0.8)) {
-    if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
-    liveScanner.gapLevel = 1;
-  }
-  if (liveScanner.gapLevel < 2 && offMs >= Math.max(midGap * 1.8, longGap * 0.8)) {
-    trimLiveTrailingSpace();
-    appendLiveRaw(' / ');
-    liveScanner.gapLevel = 2;
-  }
+  setLiveRenderedOutput();
 }
 
 function updateScannerSignal(isOn, stateLabel) {
   if (!liveScanner.running) return;
 
-  const now = performance.now();
-  maybeCommitIdleGap(now);
-
   liveScanPulse.classList.toggle('on', isOn);
   if (stateLabel) liveScanState.textContent = stateLabel;
+
+  const now = performance.now();
 
   if (!liveScanner.lastChange) {
     liveScanner.lastChange = now;
     liveScanner.lastState = isOn;
     return;
   }
-  if (isOn === liveScanner.lastState) return;
+
+  if (isOn === liveScanner.lastState) {
+    if (!isOn && liveScanner.hasSignal) {
+      const offMs = now - liveScanner.lastChange;
+      const dot = clamp(liveScanner.dotEstimate, 28, 550);
+
+      if (offMs >= dot * 3.2 && liveScanner.currentCode) {
+        appendRawLetterGap();
+        commitCurrentCode();
+        liveScanner.lastChange = now;
+      }
+      if (offMs >= dot * 6.5 && liveScanner.decodedText && !liveScanner.decodedText.endsWith(' ')) {
+        commitWordGap();
+        liveScanner.lastChange = now;
+      }
+    }
+    return;
+  }
 
   const duration = now - liveScanner.lastChange;
-  const toneCentroids = getToneCentroids();
-  const gapCentroids = getGapCentroids();
-  const minPulseMs = Math.max(18, Math.min(toneCentroids[0] * 0.30, 95));
-  const minGapMs = Math.max(16, minPulseMs * 0.5);
 
-  if (liveScanner.lastState) {
-    if (duration >= minPulseMs) {
-      commitToneDuration(duration);
-      liveScanner.hasSignal = true;
-    }
-  } else if (liveScanner.hasSignal && duration >= minGapMs) {
-    commitGapDuration(duration);
-  } else if (!isOn && duration >= gapCentroids[0] * 0.7) {
-    adaptDotEstimate(gapCentroids[0]);
-  }
+  if (liveScanner.lastState) processOnDuration(duration);
+  else processOffDuration(duration);
 
   liveScanner.lastState = isOn;
   liveScanner.lastChange = now;
-  if (isOn) liveScanner.gapLevel = 0;
 }
 
 function cleanupLiveMedia() {
@@ -1684,21 +1717,16 @@ function cleanupLiveMedia() {
     try { liveScanner.audioCtx.close(); } catch {}
     liveScanner.audioCtx = null;
   }
+
   liveScanner.freqData = null;
   liveScanner.timeDataFloat = null;
-  liveScanner.timeDataByte = null;
 }
 
 async function stopLiveScanner() {
   if (!liveScanner.running) return;
   liveScanner.running = false;
 
-  const now = performance.now();
-  if (liveScanner.lastChange) {
-    const minPulseMs = Math.max(18, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.30, 95));
-    if (liveScanner.lastState && now - liveScanner.lastChange >= minPulseMs) commitToneDuration(now - liveScanner.lastChange);
-    else maybeCommitIdleGap(now + liveScanner.dotEstimate * 6);
-  }
+  flushLiveDecoder(true);
 
   cleanupLiveMedia();
   btnScanStart.style.display = '';
@@ -1711,59 +1739,50 @@ async function stopLiveScanner() {
 
 function getBinMagnitude(freqData, sampleRate, fftSize, targetFreq) {
   const binHz = sampleRate / fftSize;
-  const bin = targetFreq / binHz;
-  const center = Math.round(bin);
+  const center = Math.round(targetFreq / binHz);
+
   let total = 0;
   let weightTotal = 0;
-
   for (let i = -2; i <= 2; i++) {
     const idx = center + i;
     if (idx < 0 || idx >= freqData.length) continue;
-    const weight = i === 0 ? 1 : (i === -1 || i === 1 ? 0.72 : 0.42);
-    const mag = Math.pow(10, freqData[idx] / 20);
-    total += mag * weight;
+    const weight = i === 0 ? 1 : (Math.abs(i) === 1 ? 0.72 : 0.42);
+    total += Math.pow(10, freqData[idx] / 20) * weight;
     weightTotal += weight;
   }
-
-  return total / Math.max(1e-6, weightTotal);
+  return total / Math.max(weightTotal, 1e-6);
 }
 
 function getNeighbourNoise(freqData, sampleRate, fftSize, targetFreq) {
   const binHz = sampleRate / fftSize;
   const center = Math.round(targetFreq / binHz);
+
   let total = 0;
   let count = 0;
-
-  for (let i = -11; i <= 11; i++) {
+  for (let i = -12; i <= 12; i++) {
     if (Math.abs(i) <= 4) continue;
     const idx = center + i;
     if (idx < 0 || idx >= freqData.length) continue;
     total += Math.pow(10, freqData[idx] / 20);
     count++;
   }
-
-  return total / Math.max(1, count);
+  return total / Math.max(count, 1);
 }
 
 function detectToneBand(analyser, freqData, timeDataFloat) {
   analyser.getFloatFrequencyData(freqData);
-
-  if (analyser.getFloatTimeDomainData) {
-    analyser.getFloatTimeDomainData(timeDataFloat);
-  }
+  if (analyser.getFloatTimeDomainData) analyser.getFloatTimeDomainData(timeDataFloat);
 
   const sampleRate = liveScanner.audioCtx.sampleRate;
   const fftSize = analyser.fftSize;
 
   let rms = 0;
   for (let i = 0; i < timeDataFloat.length; i++) {
-    const sample = timeDataFloat[i];
-    rms += sample * sample;
+    const s = timeDataFloat[i];
+    rms += s * s;
   }
   rms = Math.sqrt(rms / Math.max(1, timeDataFloat.length));
-
-  if (!liveScanner.audioRmsSmooth) liveScanner.audioRmsSmooth = rms;
-  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth * 0.72 + rms * 0.28;
+  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth ? (liveScanner.audioRmsSmooth * 0.72 + rms * 0.28) : rms;
 
   let best = null;
   let second = null;
@@ -1773,118 +1792,104 @@ function detectToneBand(analyser, freqData, timeDataFloat) {
     const noise = getNeighbourNoise(freqData, sampleRate, fftSize, cand.freq);
     const ratio = band / Math.max(noise, 1e-8);
 
-    cand.smooth = cand.smooth ? (cand.smooth * 0.62 + band * 0.38) : band;
-    cand.ratioSmooth = cand.ratioSmooth ? (cand.ratioSmooth * 0.55 + ratio * 0.45) : ratio;
+    cand.smooth = cand.smooth ? (cand.smooth * 0.64 + band * 0.36) : band;
+    cand.ratioSmooth = cand.ratioSmooth ? (cand.ratioSmooth * 0.60 + ratio * 0.40) : ratio;
 
-    const strength = cand.smooth * Math.pow(cand.ratioSmooth, 1.2);
+    const strength = cand.smooth * Math.pow(cand.ratioSmooth, 1.18);
 
     if (!best || strength > best.strength) {
       second = best;
-      best = { cand, band: cand.smooth, ratio: cand.ratioSmooth, strength };
+      best = { cand, strength };
     } else if (!second || strength > second.strength) {
-      second = { cand, band: cand.smooth, ratio: cand.ratioSmooth, strength };
+      second = { cand, strength };
     }
   }
 
-  const bestFreq = best?.cand.freq || 0;
-  const bestBand = best?.band || 0;
-  const bestRatio = best?.ratio || 1;
+  const bestCand = best?.cand;
   const secondStrength = second?.strength || 0;
-  const separation = best && second ? best.strength / Math.max(secondStrength, 1e-8) : 1.5;
+  const bestStrength = best?.strength || 0;
+  const bestFreq = bestCand?.freq || 0;
+  const bestBand = bestCand?.smooth || 0;
+  const bestRatio = bestCand?.ratioSmooth || 1;
+  const separation = bestStrength / Math.max(secondStrength, 1e-8);
 
-  if (!liveScanner.audioFloor) liveScanner.audioFloor = bestBand || 0.00001;
   if (!liveScanner.audioStateLatch) {
-    liveScanner.audioFloor = liveScanner.audioFloor * 0.986 + Math.min(bestBand, liveScanner.audioFloor * 1.6) * 0.014;
+    liveScanner.audioFloor = liveScanner.audioFloor * 0.986 + Math.min(bestBand, liveScanner.audioFloor * 1.8) * 0.014;
     liveScanner.audioRmsFloor = liveScanner.audioRmsFloor * 0.986 + liveScanner.audioRmsSmooth * 0.014;
   }
 
   if (performance.now() < liveScanner.calibratingUntil) {
-    liveScanner.audioStateLatch = false;
     liveScanner.audioLockedFreq = 0;
     liveScanner.audioLockedScore = 0;
-    liveScanner.audioBestFreq = bestFreq;
+    liveScanner.audioStateLatch = false;
     return { on: false, label: 'Calibrating mic', quality: 0.12, qualityLabel: 'Calibrating' };
   }
 
-  const usableBand = bestBand > liveScanner.audioFloor * 1.12;
-  const usableRatio = bestRatio > 1.22;
-  const usableRms = liveScanner.audioRmsSmooth > Math.max(0.004, liveScanner.audioRmsFloor * 1.08);
-
-  if (usableBand && usableRatio && usableRms) {
-    liveScanner.audioBestFreq = bestFreq;
-    liveScanner.audioLastToneSeenAt = performance.now();
-  }
-
-  const desired = parseInt(freqSlider.value, 10);
-  const nearDesired = Math.abs(bestFreq - desired) <= 160;
-
-  let lockConfidence =
-    clamp((bestRatio - 1.08) / 1.6, 0, 1) * 0.50 +
+  const lockScore =
+    clamp((bestRatio - 1.15) / 1.2, 0, 1) * 0.48 +
     clamp((bestBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.2, 0.003), 0, 1) * 0.22 +
-    clamp((liveScanner.audioRmsSmooth - Math.max(0.0036, liveScanner.audioRmsFloor * 1.0)) / Math.max(liveScanner.audioRmsFloor * 2.0, 0.014), 0, 1) * 0.16 +
-    clamp((separation - 1.0) / 0.7, 0, 1) * 0.12;
-
-  if (nearDesired) lockConfidence = Math.min(1, lockConfidence + 0.05);
+    clamp((liveScanner.audioRmsSmooth - Math.max(liveScanner.audioRmsFloor * 1.0, 0.0035)) / Math.max(liveScanner.audioRmsFloor * 1.8, 0.012), 0, 1) * 0.14 +
+    clamp((separation - 1.0) / 0.8, 0, 1) * 0.16;
 
   if (!liveScanner.audioLockedFreq) {
-    if (lockConfidence > 0.42 && usableBand && usableRatio) {
+    if (lockScore > 0.42) {
       liveScanner.audioLockedFreq = bestFreq;
-      liveScanner.audioLockedScore = lockConfidence;
+      liveScanner.audioLockedScore = lockScore;
     }
   } else {
-    const locked = liveScanner.audioCandidates.find(c => c.freq === liveScanner.audioLockedFreq);
-    const lockedBand = locked ? locked.smooth : bestBand;
-    const lockedRatio = locked ? locked.ratioSmooth : bestRatio;
-    const lockedStrength = lockedBand * Math.pow(lockedRatio, 1.2);
-    const bestStrength = best?.strength || lockedStrength;
-    const bestCloseToLock = Math.abs(bestFreq - liveScanner.audioLockedFreq) <= 80;
+    const lockCand = liveScanner.audioCandidates.find(c => c.freq === liveScanner.audioLockedFreq);
+    const lockStrength = lockCand ? (lockCand.smooth * Math.pow(lockCand.ratioSmooth, 1.18)) : 0;
+    const bestClose = Math.abs(bestFreq - liveScanner.audioLockedFreq) <= 80;
 
-    if (bestCloseToLock || lockedStrength >= bestStrength * 0.76) {
-      liveScanner.audioLockedScore = liveScanner.audioLockedScore * 0.72 + lockConfidence * 0.28;
-    } else if (lockConfidence > liveScanner.audioLockedScore + 0.14) {
+    if (bestClose || lockStrength >= bestStrength * 0.72) {
+      liveScanner.audioLockedScore = liveScanner.audioLockedScore * 0.72 + lockScore * 0.28;
+    } else if (lockScore > liveScanner.audioLockedScore + 0.14) {
       liveScanner.audioLockedFreq = bestFreq;
-      liveScanner.audioLockedScore = lockConfidence;
+      liveScanner.audioLockedScore = lockScore;
     } else {
       liveScanner.audioLockedScore *= 0.992;
     }
-
-    if (performance.now() - liveScanner.audioLastToneSeenAt > 1300 && liveScanner.audioLockedScore < 0.26) {
-      liveScanner.audioLockedFreq = 0;
-      liveScanner.audioLockedScore = 0;
-    }
   }
 
-  const lockedFreq = liveScanner.audioLockedFreq || bestFreq;
-  const lockedCand = liveScanner.audioCandidates.find(c => c.freq === lockedFreq) || best?.cand;
-  const lockedBand = lockedCand ? lockedCand.smooth : bestBand;
-  const lockedRatio = lockedCand ? lockedCand.ratioSmooth : bestRatio;
+  const activeFreq = liveScanner.audioLockedFreq || bestFreq;
+  const activeCand = liveScanner.audioCandidates.find(c => c.freq === activeFreq) || bestCand;
+  const activeBand = activeCand?.smooth || bestBand;
+  const activeRatio = activeCand?.ratioSmooth || bestRatio;
 
   const onMetric =
-    clamp((lockedRatio - 1.18) / 0.92, 0, 1) * 0.52 +
-    clamp((lockedBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.1, 0.003), 0, 1) * 0.28 +
-    clamp((liveScanner.audioRmsSmooth - Math.max(0.0036, liveScanner.audioRmsFloor * 1.0)) / Math.max(liveScanner.audioRmsFloor * 1.8, 0.014), 0, 1) * 0.20;
+    clamp((activeRatio - 1.18) / 0.9, 0, 1) * 0.54 +
+    clamp((activeBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.0, 0.003), 0, 1) * 0.28 +
+    clamp((liveScanner.audioRmsSmooth - Math.max(liveScanner.audioRmsFloor * 1.0, 0.0035)) / Math.max(liveScanner.audioRmsFloor * 1.7, 0.012), 0, 1) * 0.18;
 
   const offMetric =
-    clamp((1.22 - lockedRatio) / 0.35, 0, 1) * 0.58 +
-    clamp((liveScanner.audioFloor * 1.08 - lockedBand) / Math.max(liveScanner.audioFloor * 0.8, 0.002), 0, 1) * 0.24 +
-    clamp((Math.max(0.003, liveScanner.audioRmsFloor * 0.98) - liveScanner.audioRmsSmooth) / Math.max(liveScanner.audioRmsFloor * 0.6, 0.01), 0, 1) * 0.18;
+    clamp((1.18 - activeRatio) / 0.32, 0, 1) * 0.58 +
+    clamp((liveScanner.audioFloor * 1.08 - activeBand) / Math.max(liveScanner.audioFloor * 0.9, 0.002), 0, 1) * 0.22 +
+    clamp((Math.max(liveScanner.audioRmsFloor * 0.98, 0.0025) - liveScanner.audioRmsSmooth) / Math.max(liveScanner.audioRmsFloor * 0.65, 0.01), 0, 1) * 0.20;
 
-  liveScanner.audioOnScore = liveScanner.audioOnScore * 0.58 + onMetric * 0.42;
-  liveScanner.audioOffScore = liveScanner.audioOffScore * 0.58 + offMetric * 0.42;
+  liveScanner.audioOnScore = liveScanner.audioOnScore * 0.55 + onMetric * 0.45;
+  liveScanner.audioOffScore = liveScanner.audioOffScore * 0.55 + offMetric * 0.45;
 
-  if (!liveScanner.audioStateLatch && liveScanner.audioOnScore > 0.48 && liveScanner.audioLockedScore > 0.28) {
+  if (liveScanner.audioOnScore > 0.50 && liveScanner.audioLockedScore > 0.25) {
+    liveScanner.audioLastStrongAt = performance.now();
+  }
+
+  if (!liveScanner.audioStateLatch && liveScanner.audioOnScore > 0.52 && liveScanner.audioLockedScore > 0.28) {
     liveScanner.audioStateLatch = true;
   }
-  if (liveScanner.audioStateLatch && (liveScanner.audioOffScore > 0.55 || liveScanner.audioLockedScore < 0.16)) {
+  if (liveScanner.audioStateLatch && (liveScanner.audioOffScore > 0.58 || (performance.now() - liveScanner.audioLastStrongAt > 260 && liveScanner.audioLockedScore < 0.20))) {
     liveScanner.audioStateLatch = false;
   }
 
-  const quality =
-    clamp(liveScanner.audioLockedScore * 0.52 + clamp((lockedRatio - 1.0) / 1.25, 0, 1) * 0.30 + clamp((separation - 1.0) / 0.8, 0, 1) * 0.18, 0, 1);
+  const quality = clamp(
+    liveScanner.audioLockedScore * 0.52 +
+    clamp((activeRatio - 1.0) / 1.1, 0, 1) * 0.30 +
+    clamp((separation - 1.0) / 0.8, 0, 1) * 0.18,
+    0, 1
+  );
 
-  const freqLabel = liveScanner.audioLockedFreq ? `${Math.round(liveScanner.audioLockedFreq)}Hz` : 'searching';
+  const freqLabel = activeFreq ? `${Math.round(activeFreq)}Hz` : 'searching';
   const qualityLabel = liveScanner.audioStateLatch
-    ? (quality > 0.78 ? `Locked ${freqLabel}` : `Weak lock ${freqLabel}`)
+    ? (quality > 0.74 ? `Locked ${freqLabel}` : `Weak lock ${freqLabel}`)
     : (quality > 0.40 ? `Searching ${freqLabel}` : 'Noisy');
 
   return {
@@ -1915,7 +1920,7 @@ async function startAudioScanner() {
   const ctx = new AudioCtor();
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 4096;
-  analyser.smoothingTimeConstant = 0.05;
+  analyser.smoothingTimeConstant = 0.04;
   analyser.minDecibels = -100;
   analyser.maxDecibels = -10;
 
@@ -1928,7 +1933,6 @@ async function startAudioScanner() {
   liveScanner.source = source;
   liveScanner.freqData = new Float32Array(analyser.frequencyBinCount);
   liveScanner.timeDataFloat = new Float32Array(analyser.fftSize);
-  liveScanner.timeDataByte = new Uint8Array(analyser.fftSize);
 
   const loop = () => {
     if (!liveScanner.running || liveScanner.mode !== 'audio' || !liveScanner.analyser) return;
@@ -2084,7 +2088,6 @@ async function startLiveScanner() {
 
     liveScanner.lastChange = performance.now();
     liveScanner.lastState = false;
-    liveScanner.gapLevel = 0;
     setStatus(liveScanner.mode === 'audio' ? 'Listening for Morse tone...' : 'Watching for Morse light...');
   } catch (e) {
     liveScanner.running = false;
@@ -2168,8 +2171,7 @@ wpmSlider.addEventListener('input', () => {
 freqSlider.addEventListener('input', () => {
   freqVal.textContent = freqSlider.value + 'Hz';
   updateOptionsSummary();
-  if (!liveScanner.running) return;
-  if (liveScanner.mode === 'audio') {
+  if (liveScanner.running && liveScanner.mode === 'audio') {
     liveScanner.audioCandidates = buildAudioCandidateTable();
     liveScanner.audioLockedFreq = 0;
     liveScanner.audioLockedScore = 0;
