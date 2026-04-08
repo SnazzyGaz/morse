@@ -87,7 +87,6 @@ textarea { font-size: 1.1rem; min-height: 80px; }
 textarea::placeholder { color: var(--text-dim); }
 textarea:focus { border-color: var(--amber-dim); }
 
-/* one-line expanding message field */
 .message-input {
   min-height: 50px;
   height: 50px;
@@ -213,7 +212,6 @@ button:active { transform: scale(0.97); }
 .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
 #status-text { flex: 1; }
 
-/* collapsible options */
 .options-box {
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -257,7 +255,6 @@ button:active { transform: scale(0.97); }
 }
 .options-box.open .options-panel { display: block; }
 
-/* Decoder */
 .decode-out-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem 1rem; min-height: 3.5rem; }
 .decode-output { font-size: 1.25rem; color: var(--amber); line-height: 1.5; word-break: break-word; letter-spacing: 0.05em; }
 .decode-output.empty { color: var(--text-dim); font-size: 0.85rem; }
@@ -322,7 +319,6 @@ button:active { transform: scale(0.97); }
 .ref-code { font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.06em; }
 .timing-row { font-size: 0.72rem; color: var(--text-dim); line-height: 1.9; letter-spacing: 0.04em; }
 
-/* Live Scanner */
 .mode-row { display:flex; gap:0.5rem; margin-bottom:0.75rem; }
 .mode-btn {
   flex:1; padding:0.6rem 0.7rem; font-family:var(--display); font-size:0.62rem; font-weight:700;
@@ -557,7 +553,7 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div class="scanner-hint">
-      Audio mode locks onto a narrow tone band instead of plain loudness. Light mode samples the center of the camera frame and uses hysteresis to reduce false triggers.
+      Audio mode now auto-locks onto the strongest Morse tone and adapts to speaker, mic, and room noise. Light mode samples the center of the camera frame with stronger hysteresis to reduce false triggers.
     </div>
 
     <video id="live-scan-video" class="scanner-hidden-media" playsinline muted></video>
@@ -706,24 +702,34 @@ const liveScanner = {
   analyser: null,
   source: null,
   freqData: null,
-  bandNoise: 0.0005,
-  audioBandSmooth: 0,
-  audioRatioSmooth: 1,
-  audioFloor: 0.0005,
-  audioRmsFloor: 0.003,
-  audioRmsSmooth: 0,
+  timeDataFloat: null,
+  timeDataByte: null,
+
+  signalQuality: 0,
+  signalQualityLabel: 'Idle',
+
+  toneSamples: [],
+  gapSamples: [],
+
+  calibratingUntil: 0,
   audioStateLatch: false,
+  audioFloor: 0.00001,
+  audioRmsFloor: 0.002,
+  audioRmsSmooth: 0,
+  audioOnScore: 0,
+  audioOffScore: 0,
+  audioPeakHold: 0,
+  audioCandidates: [],
+  audioLockedFreq: 0,
+  audioLockedScore: 0,
+  audioBestFreq: 0,
+  audioLastToneSeenAt: 0,
+
   lightBaseline: 0,
   lightSmoothed: 0,
   lightContrastBaseline: 0,
   lightContrastSmoothed: 0,
-  lightStateLatch: false,
-  calibratingUntil: 0,
-  timeData: null,
-  toneSamples: [],
-  gapSamples: [],
-  signalQuality: 0,
-  signalQualityLabel: 'Idle'
+  lightStateLatch: false
 };
 
 function setStatus(msg) { statusText.textContent = msg; }
@@ -1427,7 +1433,6 @@ function appendTapSymbol(symbol) {
 }
 
 document.getElementById('tap-dot').addEventListener('click', () => appendTapSymbol('.'));
-
 document.getElementById('tap-dash').addEventListener('click', () => appendTapSymbol('-'));
 
 document.getElementById('tap-back').addEventListener('click', () => {
@@ -1478,26 +1483,47 @@ function setScanMode(mode) {
   setStatus(mode === 'audio' ? 'Scanner mode: audio' : 'Scanner mode: light');
 }
 
+function buildAudioCandidateTable() {
+  const desired = parseInt(freqSlider.value, 10);
+  const base = [];
+  for (let f = 380; f <= 1100; f += 40) base.push(f);
+  for (let f = desired - 120; f <= desired + 120; f += 20) {
+    if (f >= 320 && f <= 1200) base.push(f);
+  }
+  const unique = [...new Set(base)].sort((a, b) => a - b);
+  return unique.map(freq => ({
+    freq,
+    smooth: 0,
+    ratioSmooth: 1,
+    lastSeenAt: 0
+  }));
+}
+
 function resetLiveScannerState() {
   liveScanner.raw = '';
-  liveScanner.dotEstimate = getDotMs();
+  liveScanner.dotEstimate = Math.max(55, getDotMs());
   liveScanner.lastState = false;
   liveScanner.lastChange = 0;
   liveScanner.gapLevel = 0;
   liveScanner.hasSignal = false;
-  liveScanner.bandNoise = 0.0005;
-  liveScanner.audioBandSmooth = 0;
-  liveScanner.audioRatioSmooth = 1;
-  liveScanner.audioFloor = 0.0005;
-  liveScanner.audioRmsFloor = 0.003;
+  liveScanner.audioFloor = 0.00001;
+  liveScanner.audioRmsFloor = 0.002;
   liveScanner.audioRmsSmooth = 0;
+  liveScanner.audioOnScore = 0;
+  liveScanner.audioOffScore = 0;
+  liveScanner.audioPeakHold = 0;
+  liveScanner.audioCandidates = buildAudioCandidateTable();
+  liveScanner.audioLockedFreq = 0;
+  liveScanner.audioLockedScore = 0;
+  liveScanner.audioBestFreq = 0;
+  liveScanner.audioLastToneSeenAt = 0;
   liveScanner.audioStateLatch = false;
   liveScanner.lightBaseline = 0;
   liveScanner.lightSmoothed = 0;
   liveScanner.lightContrastBaseline = 0;
   liveScanner.lightContrastSmoothed = 0;
   liveScanner.lightStateLatch = false;
-  liveScanner.calibratingUntil = performance.now() + 700;
+  liveScanner.calibratingUntil = performance.now() + 1100;
   liveScanner.toneSamples = [];
   liveScanner.gapSamples = [];
   liveScanner.signalQuality = 0;
@@ -1542,15 +1568,15 @@ function trimLiveTrailingSpace() {
 }
 
 function adaptDotEstimate(unitMs) {
-  const bounded = Math.max(30, Math.min(500, unitMs));
-  liveScanner.dotEstimate = liveScanner.dotEstimate * 0.72 + bounded * 0.28;
+  const bounded = Math.max(28, Math.min(550, unitMs));
+  liveScanner.dotEstimate = liveScanner.dotEstimate * 0.76 + bounded * 0.24;
 }
 
 function commitToneDuration(ms) {
   const centroids = getToneCentroids();
   const shortTone = centroids[0];
   const longTone = centroids[1];
-  const isDash = longTone > shortTone * 1.35 && nearestIndex(ms, centroids) === 1;
+  const isDash = longTone > shortTone * 1.34 && nearestIndex(ms, centroids) === 1;
   appendLiveRaw(isDash ? '-' : '.');
   pushLimited(liveScanner.toneSamples, ms);
   adaptDotEstimate(isDash ? longTone / 3 : shortTone);
@@ -1564,12 +1590,12 @@ function commitGapDuration(ms) {
   const longGap = centroids[2];
   const cluster = nearestIndex(ms, centroids);
 
-  if ((cluster === 2 && longGap > midGap * 1.45) || ms >= midGap * 1.8) {
+  if ((cluster === 2 && longGap > midGap * 1.4) || ms >= midGap * 1.75) {
     trimLiveTrailingSpace();
     appendLiveRaw(' / ');
     liveScanner.gapLevel = 2;
     adaptDotEstimate(longGap / 7);
-  } else if ((cluster >= 1 && midGap > shortGap * 1.45) || ms >= shortGap * 2.1) {
+  } else if ((cluster >= 1 && midGap > shortGap * 1.38) || ms >= shortGap * 2.05) {
     if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
     liveScanner.gapLevel = 1;
     adaptDotEstimate(midGap / 3);
@@ -1584,11 +1610,11 @@ function maybeCommitIdleGap(now) {
   const [shortGap, midGap, longGap] = getGapCentroids();
   const offMs = now - liveScanner.lastChange;
 
-  if (liveScanner.gapLevel < 1 && offMs >= Math.max(shortGap * 2.1, midGap * 0.82)) {
+  if (liveScanner.gapLevel < 1 && offMs >= Math.max(shortGap * 2.0, midGap * 0.8)) {
     if (!liveScanner.raw.endsWith(' ') && !liveScanner.raw.endsWith(' / ')) appendLiveRaw(' ');
     liveScanner.gapLevel = 1;
   }
-  if (liveScanner.gapLevel < 2 && offMs >= Math.max(midGap * 1.85, longGap * 0.82)) {
+  if (liveScanner.gapLevel < 2 && offMs >= Math.max(midGap * 1.8, longGap * 0.8)) {
     trimLiveTrailingSpace();
     appendLiveRaw(' / ');
     liveScanner.gapLevel = 2;
@@ -1614,8 +1640,8 @@ function updateScannerSignal(isOn, stateLabel) {
   const duration = now - liveScanner.lastChange;
   const toneCentroids = getToneCentroids();
   const gapCentroids = getGapCentroids();
-  const minPulseMs = Math.max(24, Math.min(toneCentroids[0] * 0.35, 90));
-  const minGapMs = Math.max(20, minPulseMs * 0.55);
+  const minPulseMs = Math.max(18, Math.min(toneCentroids[0] * 0.30, 95));
+  const minGapMs = Math.max(16, minPulseMs * 0.5);
 
   if (liveScanner.lastState) {
     if (duration >= minPulseMs) {
@@ -1624,7 +1650,7 @@ function updateScannerSignal(isOn, stateLabel) {
     }
   } else if (liveScanner.hasSignal && duration >= minGapMs) {
     commitGapDuration(duration);
-  } else if (!isOn && duration >= gapCentroids[0] * 0.8) {
+  } else if (!isOn && duration >= gapCentroids[0] * 0.7) {
     adaptDotEstimate(gapCentroids[0]);
   }
 
@@ -1659,7 +1685,8 @@ function cleanupLiveMedia() {
     liveScanner.audioCtx = null;
   }
   liveScanner.freqData = null;
-  liveScanner.timeData = null;
+  liveScanner.timeDataFloat = null;
+  liveScanner.timeDataByte = null;
 }
 
 async function stopLiveScanner() {
@@ -1668,7 +1695,7 @@ async function stopLiveScanner() {
 
   const now = performance.now();
   if (liveScanner.lastChange) {
-    const minPulseMs = Math.max(24, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.35, 90));
+    const minPulseMs = Math.max(18, Math.min((liveScanner.dotEstimate || getDotMs()) * 0.30, 95));
     if (liveScanner.lastState && now - liveScanner.lastChange >= minPulseMs) commitToneDuration(now - liveScanner.lastChange);
     else maybeCommitIdleGap(now + liveScanner.dotEstimate * 6);
   }
@@ -1682,101 +1709,187 @@ async function stopLiveScanner() {
   setStatus('Live scanner stopped');
 }
 
-function detectToneBand(analyser, freqData, timeData) {
+function getBinMagnitude(freqData, sampleRate, fftSize, targetFreq) {
+  const binHz = sampleRate / fftSize;
+  const bin = targetFreq / binHz;
+  const center = Math.round(bin);
+  let total = 0;
+  let weightTotal = 0;
+
+  for (let i = -2; i <= 2; i++) {
+    const idx = center + i;
+    if (idx < 0 || idx >= freqData.length) continue;
+    const weight = i === 0 ? 1 : (i === -1 || i === 1 ? 0.72 : 0.42);
+    const mag = Math.pow(10, freqData[idx] / 20);
+    total += mag * weight;
+    weightTotal += weight;
+  }
+
+  return total / Math.max(1e-6, weightTotal);
+}
+
+function getNeighbourNoise(freqData, sampleRate, fftSize, targetFreq) {
+  const binHz = sampleRate / fftSize;
+  const center = Math.round(targetFreq / binHz);
+  let total = 0;
+  let count = 0;
+
+  for (let i = -11; i <= 11; i++) {
+    if (Math.abs(i) <= 4) continue;
+    const idx = center + i;
+    if (idx < 0 || idx >= freqData.length) continue;
+    total += Math.pow(10, freqData[idx] / 20);
+    count++;
+  }
+
+  return total / Math.max(1, count);
+}
+
+function detectToneBand(analyser, freqData, timeDataFloat) {
   analyser.getFloatFrequencyData(freqData);
-  analyser.getByteTimeDomainData(timeData);
+
+  if (analyser.getFloatTimeDomainData) {
+    analyser.getFloatTimeDomainData(timeDataFloat);
+  }
 
   const sampleRate = liveScanner.audioCtx.sampleRate;
-  const targetFreq = parseInt(freqSlider.value, 10);
-  const nyquist = sampleRate / 2;
-  const targetBin = Math.round((targetFreq / nyquist) * (freqData.length - 1));
-  const bandRadius = 4;
+  const fftSize = analyser.fftSize;
 
-  let band = 0;
-  let side = 0;
-  let bandCount = 0;
-  let sideCount = 0;
   let rms = 0;
-
-  for (let i = Math.max(0, targetBin - bandRadius); i <= Math.min(freqData.length - 1, targetBin + bandRadius); i++) {
-    band += Math.pow(10, freqData[i] / 20);
-    bandCount++;
-  }
-
-  const sideOffsets = [7, 8, 9, 10, 11, 12, 13];
-  for (const off of sideOffsets) {
-    const left = targetBin - off;
-    const right = targetBin + off;
-    if (left >= 0) {
-      side += Math.pow(10, freqData[left] / 20);
-      sideCount++;
-    }
-    if (right < freqData.length) {
-      side += Math.pow(10, freqData[right] / 20);
-      sideCount++;
-    }
-  }
-
-  band /= Math.max(1, bandCount);
-  side /= Math.max(1, sideCount);
-
-  for (let i = 0; i < timeData.length; i++) {
-    const sample = (timeData[i] - 128) / 128;
+  for (let i = 0; i < timeDataFloat.length; i++) {
+    const sample = timeDataFloat[i];
     rms += sample * sample;
   }
-  rms = Math.sqrt(rms / Math.max(1, timeData.length));
+  rms = Math.sqrt(rms / Math.max(1, timeDataFloat.length));
 
-  if (!liveScanner.audioBandSmooth) liveScanner.audioBandSmooth = band;
   if (!liveScanner.audioRmsSmooth) liveScanner.audioRmsSmooth = rms;
+  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth * 0.72 + rms * 0.28;
 
-  liveScanner.audioBandSmooth = liveScanner.audioBandSmooth * 0.50 + band * 0.50;
-  liveScanner.audioRmsSmooth = liveScanner.audioRmsSmooth * 0.65 + rms * 0.35;
+  let best = null;
+  let second = null;
 
-  if (!liveScanner.audioStateLatch) {
-    liveScanner.bandNoise = liveScanner.bandNoise * 0.97 + side * 0.03;
-    liveScanner.audioFloor = liveScanner.audioFloor * 0.975 + Math.min(liveScanner.audioBandSmooth, side) * 0.025;
-    liveScanner.audioRmsFloor = liveScanner.audioRmsFloor * 0.985 + liveScanner.audioRmsSmooth * 0.015;
+  for (const cand of liveScanner.audioCandidates) {
+    const band = getBinMagnitude(freqData, sampleRate, fftSize, cand.freq);
+    const noise = getNeighbourNoise(freqData, sampleRate, fftSize, cand.freq);
+    const ratio = band / Math.max(noise, 1e-8);
+
+    cand.smooth = cand.smooth ? (cand.smooth * 0.62 + band * 0.38) : band;
+    cand.ratioSmooth = cand.ratioSmooth ? (cand.ratioSmooth * 0.55 + ratio * 0.45) : ratio;
+
+    const strength = cand.smooth * Math.pow(cand.ratioSmooth, 1.2);
+
+    if (!best || strength > best.strength) {
+      second = best;
+      best = { cand, band: cand.smooth, ratio: cand.ratioSmooth, strength };
+    } else if (!second || strength > second.strength) {
+      second = { cand, band: cand.smooth, ratio: cand.ratioSmooth, strength };
+    }
   }
 
-  const floor = Math.max(side, liveScanner.bandNoise, liveScanner.audioFloor, 0.00001);
-  const ratio = liveScanner.audioBandSmooth / floor;
-  liveScanner.audioRatioSmooth = liveScanner.audioRatioSmooth * 0.42 + ratio * 0.58;
+  const bestFreq = best?.cand.freq || 0;
+  const bestBand = best?.band || 0;
+  const bestRatio = best?.ratio || 1;
+  const secondStrength = second?.strength || 0;
+  const separation = best && second ? best.strength / Math.max(secondStrength, 1e-8) : 1.5;
+
+  if (!liveScanner.audioFloor) liveScanner.audioFloor = bestBand || 0.00001;
+  if (!liveScanner.audioStateLatch) {
+    liveScanner.audioFloor = liveScanner.audioFloor * 0.986 + Math.min(bestBand, liveScanner.audioFloor * 1.6) * 0.014;
+    liveScanner.audioRmsFloor = liveScanner.audioRmsFloor * 0.986 + liveScanner.audioRmsSmooth * 0.014;
+  }
 
   if (performance.now() < liveScanner.calibratingUntil) {
     liveScanner.audioStateLatch = false;
+    liveScanner.audioLockedFreq = 0;
+    liveScanner.audioLockedScore = 0;
+    liveScanner.audioBestFreq = bestFreq;
     return { on: false, label: 'Calibrating mic', quality: 0.12, qualityLabel: 'Calibrating' };
   }
 
-  const minRms = Math.max(liveScanner.audioRmsFloor * 1.08, 0.0045);
+  const usableBand = bestBand > liveScanner.audioFloor * 1.12;
+  const usableRatio = bestRatio > 1.22;
+  const usableRms = liveScanner.audioRmsSmooth > Math.max(0.004, liveScanner.audioRmsFloor * 1.08);
 
-  const onThreshold =
-    liveScanner.audioRatioSmooth > 1.45 &&
-    liveScanner.audioBandSmooth > floor * 1.18 &&
-    liveScanner.audioRmsSmooth > minRms;
+  if (usableBand && usableRatio && usableRms) {
+    liveScanner.audioBestFreq = bestFreq;
+    liveScanner.audioLastToneSeenAt = performance.now();
+  }
 
-  const offThreshold =
-    liveScanner.audioRatioSmooth < 1.18 ||
-    liveScanner.audioBandSmooth < floor * 1.05 ||
-    liveScanner.audioRmsSmooth < Math.max(liveScanner.audioRmsFloor * 0.98, 0.003);
+  const desired = parseInt(freqSlider.value, 10);
+  const nearDesired = Math.abs(bestFreq - desired) <= 160;
 
-  if (!liveScanner.audioStateLatch && onThreshold) liveScanner.audioStateLatch = true;
-  if (liveScanner.audioStateLatch && offThreshold) liveScanner.audioStateLatch = false;
+  let lockConfidence =
+    clamp((bestRatio - 1.08) / 1.6, 0, 1) * 0.50 +
+    clamp((bestBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.2, 0.003), 0, 1) * 0.22 +
+    clamp((liveScanner.audioRmsSmooth - Math.max(0.0036, liveScanner.audioRmsFloor * 1.0)) / Math.max(liveScanner.audioRmsFloor * 2.0, 0.014), 0, 1) * 0.16 +
+    clamp((separation - 1.0) / 0.7, 0, 1) * 0.12;
 
-  const ratioScore = clamp((liveScanner.audioRatioSmooth - 1.0) / 1.4, 0, 1);
-  const rmsScore = clamp(
-    (liveScanner.audioRmsSmooth - liveScanner.audioRmsFloor * 0.9) /
-    Math.max(liveScanner.audioRmsFloor * 1.2, 0.01),
-    0,
-    1
-  );
-  const quality = clamp(ratioScore * 0.7 + rmsScore * 0.3, 0, 1);
+  if (nearDesired) lockConfidence = Math.min(1, lockConfidence + 0.05);
+
+  if (!liveScanner.audioLockedFreq) {
+    if (lockConfidence > 0.42 && usableBand && usableRatio) {
+      liveScanner.audioLockedFreq = bestFreq;
+      liveScanner.audioLockedScore = lockConfidence;
+    }
+  } else {
+    const locked = liveScanner.audioCandidates.find(c => c.freq === liveScanner.audioLockedFreq);
+    const lockedBand = locked ? locked.smooth : bestBand;
+    const lockedRatio = locked ? locked.ratioSmooth : bestRatio;
+    const lockedStrength = lockedBand * Math.pow(lockedRatio, 1.2);
+    const bestStrength = best?.strength || lockedStrength;
+    const bestCloseToLock = Math.abs(bestFreq - liveScanner.audioLockedFreq) <= 80;
+
+    if (bestCloseToLock || lockedStrength >= bestStrength * 0.76) {
+      liveScanner.audioLockedScore = liveScanner.audioLockedScore * 0.72 + lockConfidence * 0.28;
+    } else if (lockConfidence > liveScanner.audioLockedScore + 0.14) {
+      liveScanner.audioLockedFreq = bestFreq;
+      liveScanner.audioLockedScore = lockConfidence;
+    } else {
+      liveScanner.audioLockedScore *= 0.992;
+    }
+
+    if (performance.now() - liveScanner.audioLastToneSeenAt > 1300 && liveScanner.audioLockedScore < 0.26) {
+      liveScanner.audioLockedFreq = 0;
+      liveScanner.audioLockedScore = 0;
+    }
+  }
+
+  const lockedFreq = liveScanner.audioLockedFreq || bestFreq;
+  const lockedCand = liveScanner.audioCandidates.find(c => c.freq === lockedFreq) || best?.cand;
+  const lockedBand = lockedCand ? lockedCand.smooth : bestBand;
+  const lockedRatio = lockedCand ? lockedCand.ratioSmooth : bestRatio;
+
+  const onMetric =
+    clamp((lockedRatio - 1.18) / 0.92, 0, 1) * 0.52 +
+    clamp((lockedBand - liveScanner.audioFloor * 1.05) / Math.max(liveScanner.audioFloor * 2.1, 0.003), 0, 1) * 0.28 +
+    clamp((liveScanner.audioRmsSmooth - Math.max(0.0036, liveScanner.audioRmsFloor * 1.0)) / Math.max(liveScanner.audioRmsFloor * 1.8, 0.014), 0, 1) * 0.20;
+
+  const offMetric =
+    clamp((1.22 - lockedRatio) / 0.35, 0, 1) * 0.58 +
+    clamp((liveScanner.audioFloor * 1.08 - lockedBand) / Math.max(liveScanner.audioFloor * 0.8, 0.002), 0, 1) * 0.24 +
+    clamp((Math.max(0.003, liveScanner.audioRmsFloor * 0.98) - liveScanner.audioRmsSmooth) / Math.max(liveScanner.audioRmsFloor * 0.6, 0.01), 0, 1) * 0.18;
+
+  liveScanner.audioOnScore = liveScanner.audioOnScore * 0.58 + onMetric * 0.42;
+  liveScanner.audioOffScore = liveScanner.audioOffScore * 0.58 + offMetric * 0.42;
+
+  if (!liveScanner.audioStateLatch && liveScanner.audioOnScore > 0.48 && liveScanner.audioLockedScore > 0.28) {
+    liveScanner.audioStateLatch = true;
+  }
+  if (liveScanner.audioStateLatch && (liveScanner.audioOffScore > 0.55 || liveScanner.audioLockedScore < 0.16)) {
+    liveScanner.audioStateLatch = false;
+  }
+
+  const quality =
+    clamp(liveScanner.audioLockedScore * 0.52 + clamp((lockedRatio - 1.0) / 1.25, 0, 1) * 0.30 + clamp((separation - 1.0) / 0.8, 0, 1) * 0.18, 0, 1);
+
+  const freqLabel = liveScanner.audioLockedFreq ? `${Math.round(liveScanner.audioLockedFreq)}Hz` : 'searching';
   const qualityLabel = liveScanner.audioStateLatch
-    ? (quality > 0.7 ? 'Locked' : 'Weak lock')
-    : (quality > 0.35 ? 'Searching' : 'Noisy');
+    ? (quality > 0.78 ? `Locked ${freqLabel}` : `Weak lock ${freqLabel}`)
+    : (quality > 0.40 ? `Searching ${freqLabel}` : 'Noisy');
 
   return {
     on: liveScanner.audioStateLatch,
-    label: liveScanner.audioStateLatch ? 'Tone locked' : 'Listening',
+    label: liveScanner.audioStateLatch ? `Tone ${freqLabel}` : `Listening ${freqLabel}`,
     quality,
     qualityLabel
   };
@@ -1790,14 +1903,21 @@ async function startAudioScanner() {
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    audio: {
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
+      channelCount: 1
+    }
   });
 
   const AudioCtor = window.AudioContext || window.webkitAudioContext;
   const ctx = new AudioCtor();
   const analyser = ctx.createAnalyser();
-  analyser.fftSize = 2048;
-  analyser.smoothingTimeConstant = 0.18;
+  analyser.fftSize = 4096;
+  analyser.smoothingTimeConstant = 0.05;
+  analyser.minDecibels = -100;
+  analyser.maxDecibels = -10;
 
   const source = ctx.createMediaStreamSource(stream);
   source.connect(analyser);
@@ -1807,11 +1927,12 @@ async function startAudioScanner() {
   liveScanner.analyser = analyser;
   liveScanner.source = source;
   liveScanner.freqData = new Float32Array(analyser.frequencyBinCount);
-  liveScanner.timeData = new Uint8Array(analyser.fftSize);
+  liveScanner.timeDataFloat = new Float32Array(analyser.fftSize);
+  liveScanner.timeDataByte = new Uint8Array(analyser.fftSize);
 
   const loop = () => {
     if (!liveScanner.running || liveScanner.mode !== 'audio' || !liveScanner.analyser) return;
-    const info = detectToneBand(analyser, liveScanner.freqData, liveScanner.timeData);
+    const info = detectToneBand(analyser, liveScanner.freqData, liveScanner.timeDataFloat);
     updateLiveScanQuality(info.quality ?? 0, info.qualityLabel || 'Listening');
     updateScannerSignal(info.on, info.label);
     liveScanner.rafId = requestAnimationFrame(loop);
@@ -1830,6 +1951,7 @@ function sampleLightRegions(frame, width, height) {
   let centerCount = 0;
   let outerTotal = 0;
   let outerCount = 0;
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
@@ -1844,6 +1966,7 @@ function sampleLightRegions(frame, width, height) {
       }
     }
   }
+
   const center = centerTotal / Math.max(1, centerCount);
   const outer = outerTotal / Math.max(1, outerCount);
   return { center, outer, contrast: center - outer };
@@ -1887,12 +2010,12 @@ async function startLightScanner() {
       if (!liveScanner.lightContrastBaseline) liveScanner.lightContrastBaseline = contrast;
       if (!liveScanner.lightContrastSmoothed) liveScanner.lightContrastSmoothed = contrast;
 
-      liveScanner.lightSmoothed = liveScanner.lightSmoothed * 0.72 + brightness * 0.28;
-      liveScanner.lightContrastSmoothed = liveScanner.lightContrastSmoothed * 0.68 + contrast * 0.32;
+      liveScanner.lightSmoothed = liveScanner.lightSmoothed * 0.76 + brightness * 0.24;
+      liveScanner.lightContrastSmoothed = liveScanner.lightContrastSmoothed * 0.72 + contrast * 0.28;
 
       if (!liveScanner.lightStateLatch) {
-        liveScanner.lightBaseline = liveScanner.lightBaseline * 0.965 + liveScanner.lightSmoothed * 0.035;
-        liveScanner.lightContrastBaseline = liveScanner.lightContrastBaseline * 0.94 + liveScanner.lightContrastSmoothed * 0.06;
+        liveScanner.lightBaseline = liveScanner.lightBaseline * 0.97 + liveScanner.lightSmoothed * 0.03;
+        liveScanner.lightContrastBaseline = liveScanner.lightContrastBaseline * 0.955 + liveScanner.lightContrastSmoothed * 0.045;
       }
 
       if (performance.now() < liveScanner.calibratingUntil) {
@@ -1903,23 +2026,31 @@ async function startLightScanner() {
       }
 
       const brightnessDelta = liveScanner.lightSmoothed - liveScanner.lightBaseline;
-      const contrastBase = liveScanner.lightContrastBaseline;
-      const onContrast = Math.max(contrastBase + 11, 9);
-      const offContrast = Math.max(contrastBase + 4, 3.5);
-      const onBrightness = Math.max(12, Math.abs(liveScanner.lightBaseline) * 0.08);
-      const offBrightness = Math.max(5, onBrightness * 0.45);
+      const contrastDelta = liveScanner.lightContrastSmoothed - liveScanner.lightContrastBaseline;
 
-      if (!liveScanner.lightStateLatch && liveScanner.lightContrastSmoothed > onContrast && brightnessDelta > onBrightness) {
+      const onContrast = Math.max(8.5, liveScanner.lightContrastBaseline * 0.18 + 8);
+      const offContrast = Math.max(3.4, onContrast * 0.46);
+      const onBrightness = Math.max(10, Math.abs(liveScanner.lightBaseline) * 0.065);
+      const offBrightness = Math.max(4.2, onBrightness * 0.42);
+
+      if (!liveScanner.lightStateLatch && contrastDelta > onContrast && brightnessDelta > onBrightness) {
         liveScanner.lightStateLatch = true;
       }
-      if (liveScanner.lightStateLatch && (liveScanner.lightContrastSmoothed < offContrast || brightnessDelta < offBrightness)) {
+      if (liveScanner.lightStateLatch && (contrastDelta < offContrast || brightnessDelta < offBrightness)) {
         liveScanner.lightStateLatch = false;
       }
 
-      const contrastScore = clamp((liveScanner.lightContrastSmoothed - contrastBase) / Math.max(onContrast - contrastBase, 1), 0, 1);
+      const contrastScore = clamp(contrastDelta / Math.max(onContrast, 1), 0, 1);
       const brightnessScore = clamp(brightnessDelta / Math.max(onBrightness, 1), 0, 1);
-      const lightQuality = clamp(contrastScore * 0.6 + brightnessScore * 0.4, 0, 1);
-      updateLiveScanQuality(lightQuality, liveScanner.lightStateLatch ? (lightQuality > 0.72 ? 'Locked' : 'Weak lock') : (lightQuality > 0.42 ? 'Searching' : 'Dim/noisy'));
+      const lightQuality = clamp(contrastScore * 0.62 + brightnessScore * 0.38, 0, 1);
+
+      updateLiveScanQuality(
+        lightQuality,
+        liveScanner.lightStateLatch
+          ? (lightQuality > 0.72 ? 'Locked' : 'Weak lock')
+          : (lightQuality > 0.42 ? 'Searching' : 'Dim/noisy')
+      );
+
       updateScannerSignal(liveScanner.lightStateLatch, liveScanner.lightStateLatch ? 'Light detected' : 'Watching light');
     }
 
@@ -2037,6 +2168,13 @@ wpmSlider.addEventListener('input', () => {
 freqSlider.addEventListener('input', () => {
   freqVal.textContent = freqSlider.value + 'Hz';
   updateOptionsSummary();
+  if (!liveScanner.running) return;
+  if (liveScanner.mode === 'audio') {
+    liveScanner.audioCandidates = buildAudioCandidateTable();
+    liveScanner.audioLockedFreq = 0;
+    liveScanner.audioLockedScore = 0;
+    liveScanner.calibratingUntil = performance.now() + 250;
+  }
 });
 
 txOptionsToggle.addEventListener('click', () => toggleOptions());
